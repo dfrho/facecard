@@ -18,7 +18,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Link href="/signup">
+                <Link href="/create-profile">
                   <Button size="lg" className="w-full">Get Started</Button>
                 </Link>
                 <Link href="/features">
@@ -139,7 +139,7 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Link href="/signup">
+              <Link href="/create-profile">
                 <Button size="lg" variant="secondary" className="w-full">
                   Get Started for Free
                 </Button>
