@@ -19,7 +19,6 @@ export default function CreateProfilePage() {
                 We'll use this information to personalize your video business card.
               </p>
             </div>
-            
             <ExpandedProfileForm />
           </div>
         </div>

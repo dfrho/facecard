@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export function UserProfileForm() {
   return (
-    <form className="space-y-6">
+    <div className="space-y-6">
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -57,6 +57,6 @@ export function UserProfileForm() {
           <Button type="button">Next: Interests & Skills</Button>
         </Link>
       </div>
-    </form>
+    </div>
   );
 }
