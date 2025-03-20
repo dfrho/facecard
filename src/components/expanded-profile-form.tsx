@@ -6,7 +6,7 @@ import React from "react";
 
 export function ExpandedProfileForm() {
   return (
-    <form className="space-y-8">
+    <div className="space-y-8">
       {/* Basic Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Basic Information</h3>
@@ -191,6 +191,6 @@ export function ExpandedProfileForm() {
           <Button type="button">Next: Interests & Skills</Button>
         </Link>
       </div>
-    </form>
+    </div>
   );
 }
