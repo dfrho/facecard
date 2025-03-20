@@ -1,0 +1,12 @@
+[codemcp]
+version = "0.1.0"
+
+[allow]
+write_files = true
+edit_files = true
+ls = true
+grep = true
+run_command = true
+
+[command.git]
+enabled = true
