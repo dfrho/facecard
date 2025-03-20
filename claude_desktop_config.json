@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "codemcp": {
+            "command": "/Users/<username>/.local/bin/uvx",
+            "args": [
+                "--from",
+                "git+https://github.com/ezyang/codemcp@prod",
+                "codemcp"
+            ]
+        }
+    }
+}

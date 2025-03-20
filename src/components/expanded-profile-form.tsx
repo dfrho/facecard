@@ -2,11 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import React from "react"; 
 
 export function ExpandedProfileForm() {
   return (
-    <div className="space-y-8">
+    <form className="space-y-8">
       {/* Basic Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Basic Information</h3>
@@ -191,6 +190,6 @@ export function ExpandedProfileForm() {
           <Button type="button">Next: Interests & Skills</Button>
         </Link>
       </div>
-    </div>
+    </form>
   );
 }
