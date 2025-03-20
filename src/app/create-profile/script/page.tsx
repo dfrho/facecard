@@ -24,14 +24,14 @@ export default function ScriptPage() {
             <div className="rounded-md border bg-muted/20 p-6">
               <blockquote className="italic">
                 <p>
-                  Hi, I'm [Your Name], a [Job Title] at [Company]. With over [X] years of experience in [Skills], 
-                  I'm passionate about [Interests] and have a proven track record of [Achievements].
+                  Hi, I&apos;m [Your Name], a [Job Title] at [Company]. With over [X] years of experience in [Skills], 
+                  I&apos;m passionate about [Interests] and have a proven track record of [Achievements].
                 </p>
                 <p className="mt-2">
-                  I'm currently seeking [What You're Seeking] and would love to connect with [Ideal Connection].
+                  I&apos;m currently seeking [What You&apos;re Seeking] and would love to connect with [Ideal Connection].
                 </p>
                 <p className="mt-2">
-                  Let's explore how we might create value together. Feel free to reach out at [Email]!
+                  Let&apos;s explore how we might create value together. Feel free to reach out at [Email]!
                 </p>
               </blockquote>
             </div>

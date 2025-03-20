@@ -21,7 +21,7 @@ export function Header() {
             <Link href="/login">
               <Button variant="outline">Login</Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/create-profile">
               <Button>Get Started</Button>
             </Link>
           </nav>
