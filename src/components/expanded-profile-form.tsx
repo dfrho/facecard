@@ -7,9 +7,6 @@ import React from "react";
 export function ExpandedProfileForm() {
   return (
     <div className="space-y-8">
-      {/* Basic Information */}
-      <div className="space-y-5">
-        <h3 className="text-base font-medium sm:text-lg">Basic Information</h3>
       <div className="space-y-5">
         <h3 className="text-base font-medium sm:text-lg">Basic Information</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -49,8 +46,6 @@ export function ExpandedProfileForm() {
         <h3 className="text-base font-medium sm:text-lg">Setting the Tone (Style Selector)</h3>
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">Setting the Tone (Style Selector)</h3>
-        <div className="space-y-2">
-          <Label htmlFor="toneSlider">How do you want to come across?</Label>
           <div className="space-y-3">
           <div className="space-y-3">
             <input
@@ -65,10 +60,10 @@ export function ExpandedProfileForm() {
               <span className="mr-1" className="mr-1">Friendly & Casual 😎</span>
               <span className="mx-1 text-center" className="mx-1 text-center">Professional but Approachable 📢</span>
               <span className="ml-1" className="ml-1">Straight to Business 💼</span>
-            </div>
-          </div>
-        </div>
-      </div>
+            <div className="flex flex-wrap justify-between text-xs sm:text-sm">
+              <span className="mr-1">Friendly & Casual 😎</span>
+              <span className="mx-1 text-center">Professional but Approachable 📢</span>
+              <span className="ml-1">Straight to Business 💼</span>
 
       {/* Personal Introduction */}
       <div className="space-y-5 border-t pt-6">
@@ -79,9 +74,6 @@ export function ExpandedProfileForm() {
           <Input
             id="introduction"
             placeholder="Example: &quot;This is Sam—he&apos;s the guy who knows EVERYONE in tech!&quot;"
-          <Input
-            id="introduction"
-            placeholder="Example: &quot;This is Sam—he&apos;s the guy who knows EVERYONE in tech!&quot;"
           />
         </div>
 
@@ -89,18 +81,14 @@ export function ExpandedProfileForm() {
         <div className="space-y-2">
           <Label htmlFor="superpower">What&apos;s your superpower?</Label>
           <select
-          <select
             id="superpower"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             defaultValue=""
             defaultValue=""
           >
             <option value="" disabled>Select your superpower or type your own</option>
+          >
             <option value="" disabled>Select your superpower or type your own</option>
-            <option value="connect">I connect people like a human LinkedIn 🔗</option>
-            <option value="ideas">I turn ideas into businesses 💡</option>
-            <option value="creative">I make things look (or sound) amazing 🎨🎙️</option>
-            <option value="problems">I solve impossible problems 🕵️</option>
             <option value="inspire">I inspire people to take action 🚀</option>
             <option value="vibes">I bring the good vibes 😎</option>
             <option value="other">Other (please specify below)</option>
@@ -121,26 +109,28 @@ export function ExpandedProfileForm() {
 
         <div className="space-y-2">
           <Label htmlFor="industry">What industry or niche are you in?</Label>
+          />
+        </div>
+
+
+        <div className="space-y-2">
+          <Label htmlFor="industry">What industry or niche are you in?</Label>
           <Input
             id="industry"
-            placeholder="Be specific! E.g., &quot;AI-powered marketing automation&quot;"
             placeholder="Be specific! E.g., &quot;AI-powered marketing automation&quot;"
           />
           <p className="text-xs text-muted-foreground">
             Be specific! Instead of &quot;Fitness,&quot; say &quot;Strength training for busy professionals.&quot;
           </p>
         </div>
-      </div>
 
 
       {/* Skills and Value */}
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
       <div className="space-y-5 border-t pt-6">
+      <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
-
-        <div className="space-y-2">
-          <Label htmlFor="mainValue">What&apos;s the ONE thing people should reach out to you for?</Label>
           <Input
             id="mainValue"
             placeholder="Example: &quot;I help startups get their first 1,000 customers.&quot;"
@@ -163,7 +153,6 @@ export function ExpandedProfileForm() {
         <div className="space-y-2">
           <Label htmlFor="audience">Who do you LOVE helping the most?</Label>
           <select
-          <select
             id="audience"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             defaultValue=""
@@ -171,12 +160,9 @@ export function ExpandedProfileForm() {
           >
             <option value="" disabled>Select who you love helping most</option>
             <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
+          >
             <option value="" disabled>Select who you love helping most</option>
             <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
-            <option value="retention">Businesses struggling with customer retention 💰</option>
-            <option value="career">People looking for their next big career move 🎯</option>
-            <option value="likeminded">Just cool, like-minded people looking to connect 🤝</option>
-            <option value="other">Other (please specify below)</option>
           </select>
           <Input id="otherAudience" placeholder="Enter who you love helping most" className="mt-2" />
         </div>
@@ -192,10 +178,8 @@ export function ExpandedProfileForm() {
         <div className="space-y-2">
           <Label htmlFor="primaryAsk">Right now, what&apos;s the #1 thing you need help with?</Label>
           <Input
-            id="primaryAsk"
-            placeholder="Example: &quot;I&apos;m looking for beta testers for my AI tool&quot;"
-          />
-          <p className="text-xs text-muted-foreground">
+      <div className="space-y-5 border-t pt-6">
+        <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
             Make it clear! Be specific about what you&apos;re looking for.
             Make it clear! Be specific about what you&apos;re looking for.
           </p>
@@ -219,9 +203,6 @@ export function ExpandedProfileForm() {
           />
         </div>
       </div>
-
-      <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 border-t pt-6">
-        <Button type="button" variant="outline" className="w-full sm:w-auto">
 
       <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 border-t pt-6">
         <Button type="button" variant="outline" className="w-full sm:w-auto">
