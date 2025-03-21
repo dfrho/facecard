@@ -1,100 +1,154 @@
-import Link from "next/link";
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function InterestsPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedInterests, setSelectedInterests] = useState([]);
+  
+  // Available interests to choose from
+  const availableInterests = [
+    "Artificial Intelligence", "Marketing", "Finance", "Design", 
+    "Product Management", "Sales", "Business Development", 
+    "Leadership", "Venture Capital", "Startups", "E-commerce",
+    "Data Science", "Mobile Development", "Web Development",
+    "Public Speaking", "Writing", "Creative Direction",
+    "Growth Hacking", "Social Media", "SEO", "Content Creation"
+  ];
+
+  // Load previous form data
+  useEffect(() => {
+    const loadProfileData = () => {
+      const savedData = sessionStorage.getItem('profileFormData');
+      if (savedData) {
+        setFormData(JSON.parse(savedData));
+      } else {
+        // If no data, go back to first step
+        router.push('/create-profile');
+      }
+      setIsLoading(false);
+    };
+    
+    const timer = setTimeout(loadProfileData, 300);
+    return () => clearTimeout(timer);
+  }, [router]);
+
+  const toggleInterest = (interest) => {
+    setSelectedInterests(prev => {
+      if (prev.includes(interest)) {
+        return prev.filter(item => item !== interest);
+      } else {
+        return [...prev, interest];
+      }
+    });
+  };
+
+  const handleNextStep = () => {
+    // Combine previous form data with interests
+    const updatedFormData = {
+      ...formData,
+      interests: selectedInterests
+    };
+    
+    // Save to session storage
+    sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
+    
+    // Navigate to next step
+    router.push('/create-profile/script');
+  };
+
+  const handleBackStep = () => {
+    // Save selected interests before going back
+    const updatedFormData = {
+      ...formData,
+      interests: selectedInterests
+    };
+    
+    // Update session storage
+    sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
+    
+    // Go back to previous step
+    router.push('/create-profile');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl px-4 sm:px-6 py-8 sm:py-10 md:py-12 flex justify-center items-center min-h-[50vh]">
+        <div className="animate-pulse text-center">
+          <p className="text-muted-foreground">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container max-w-4xl py-12">
+    <div className="container max-w-4xl px-4 sm:px-6 py-8 sm:py-10 md:py-12">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Create Your Profile</h1>
-          <p className="text-muted-foreground">
-            Tell us about your skills and interests to complete your AI-powered video business card.
+        <div className="space-y-2 sm:space-y-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">Your Interests & Skills</h1>
+          <p className="text-muted-foreground sm:text-lg">
+            Select topics you&apos;re interested in or skilled at to help us create a more personalized script.
           </p>
         </div>
-        
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="space-y-4">
+
+        <div className="rounded-xl border bg-card p-4 sm:p-6 shadow-sm">
+          <div className="space-y-6">
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Step 2: Skills & Interests</h2>
-              <p className="text-sm text-muted-foreground">
-                These details will help us generate an engaging script that highlights your unique value.
+              <h2 className="text-lg sm:text-xl font-semibold">Step 2: Interests & Skills</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Select at least 3-5 interests or skills that represent you professionally.
               </p>
             </div>
-            
-            <form className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="skills">Professional Skills</Label>
-                  <Input 
-                    id="skills" 
-                    placeholder="e.g., Project Management, Web Development, Data Analysis" 
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Separate multiple skills with commas
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="interests">Professional Interests</Label>
-                  <Input 
-                    id="interests" 
-                    placeholder="e.g., Artificial Intelligence, Blockchain, Sustainability" 
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Separate multiple interests with commas
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="achievements">Key Achievements</Label>
-                  <textarea
-                    id="achievements"
-                    className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Briefly describe 2-3 of your most significant professional achievements"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="seeking">What are you currently seeking?</Label>
-                  <select 
-                    id="seeking"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+
+            <div className="space-y-4">
+              <Label>Your Professional Interests & Skills</Label>
+              <div className="flex flex-wrap gap-2">
+                {availableInterests.map((interest) => (
+                  <button
+                    key={interest}
+                    type="button"
+                    onClick={() => toggleInterest(interest)}
+                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                      selectedInterests.includes(interest)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background hover:bg-muted border-input'
+                    }`}
                   >
-                    <option value="" disabled selected>Select an option</option>
-                    <option value="new_opportunities">New Career Opportunities</option>
-                    <option value="networking">Professional Networking</option>
-                    <option value="clients">New Clients</option>
-                    <option value="partnerships">Business Partnerships</option>
-                    <option value="investors">Investors</option>
-                    <option value="mentorship">Mentorship</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="ideal_connection">Describe your ideal connection</Label>
-                  <textarea
-                    id="ideal_connection"
-                    className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Who would you most like to connect with and why?"
-                  />
-                </div>
+                    {interest}
+                  </button>
+                ))}
               </div>
-              
-              <div className="flex justify-between">
-                <Link href="/create-profile">
-                  <Button type="button" variant="outline">Back</Button>
-                </Link>
-                <div className="space-x-2">
-                  <Button type="button" variant="outline">Save Draft</Button>
-                  <Link href="/create-profile/script">
-                    <Button type="button">Generate Script</Button>
-                  </Link>
-                </div>
-              </div>
-            </form>
+              {selectedInterests.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedInterests.length} selected
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={handleBackStep}
+              >
+                Back to Profile
+              </Button>
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={handleNextStep}
+                disabled={selectedInterests.length < 3}
+              >
+                Next: Generate Script
+              </Button>
+            </div>
           </div>
         </div>
       </div>

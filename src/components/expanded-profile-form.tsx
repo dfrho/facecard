@@ -1,69 +1,247 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function ExpandedProfileForm() {
+  const router = useRouter();
+  
+  // State to manage form data
+  const [formData, setFormData] = useState({
+    // Basic Information
+    firstName: "",
+    lastName: "",
+    jobTitle: "",
+    company: "",
+    email: "",
+    
+    // Style/Tone
+    toneValue: 5,
+    
+    // Personal Introduction
+    introduction: "",
+    superpower: "",
+    otherSuperpower: "",
+    funFact: "",
+    industry: "",
+    
+    // Skills and Value
+    mainValue: "",
+    secondaryValue: "",
+    audience: "",
+    otherAudience: "",
+    
+    // Your Ask
+    primaryAsk: "",
+    secondaryAsk: "",
+    contactMethod: ""
+  });
+  
+  // State for form validation
+  const [errors, setErrors] = useState({});
+  
+  // State for loading/submitting
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+    
+    // Clear error for this field when user types
+    if (errors[id]) {
+      setErrors(prev => ({
+        ...prev,
+        [id]: ""
+      }));
+    }
+  };
+  
+  // Handle select changes
+  const handleSelectChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+    
+    // Clear error for this field when user selects
+    if (errors[id]) {
+      setErrors(prev => ({
+        ...prev,
+        [id]: ""
+      }));
+    }
+  };
+  
+  // Save form data as draft
+  const saveDraft = () => {
+    // Save to localStorage for persistence
+    localStorage.setItem("profileFormDraft", JSON.stringify(formData));
+    alert("Draft saved successfully!");
+  };
+  
+  // Validate form before submission
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Required fields validation
+    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!formData.jobTitle.trim()) newErrors.jobTitle = "Job title is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Email format is invalid";
+    
+    // At least one value proposition is required
+    if (!formData.mainValue.trim()) newErrors.mainValue = "Please share what people can reach out to you for";
+    
+    // Set the errors
+    setErrors(newErrors);
+    
+    // Return true if no errors
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  // Handle form submission to next step
+  const handleNextStep = () => {
+    if (validateForm()) {
+      // Save current form data to localStorage
+      localStorage.setItem("profileFormData", JSON.stringify(formData));
+      
+      // Save to session storage too for sharing between pages
+      sessionStorage.setItem("profileFormData", JSON.stringify(formData));
+      
+      // Navigate to next step
+      router.push("/create-profile/interests");
+    } else {
+      // Scroll to first error
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.getElementById(firstErrorField);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  };
+  
+  // Load saved draft or persisted data on component mount
+  React.useEffect(() => {
+    // Try to load from sessionStorage first (for navigation between steps)
+    const sessionData = sessionStorage.getItem("profileFormData");
+    // Then try localStorage (for saved drafts)
+    const savedDraft = localStorage.getItem("profileFormDraft");
+    
+    if (sessionData) {
+      setFormData(JSON.parse(sessionData));
+    } else if (savedDraft) {
+      setFormData(JSON.parse(savedDraft));
+    }
+  }, []);
+
   return (
     <div className="space-y-8">
+      {/* Basic Information */}
       <div className="space-y-5">
         <h3 className="text-base font-medium sm:text-lg">Basic Information</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
-            <Input id="firstName" placeholder="Enter your first name" />
+            <Label htmlFor="firstName">First Name {errors.firstName && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
+            <Input 
+              id="firstName" 
+              value={formData.firstName}
+              onChange={handleInputChange}
+              placeholder="Enter your first name" 
+              className={errors.firstName ? "border-red-500" : ""}
+            />
+            {errors.firstName && (
+              <p className="text-red-500 text-xs">{errors.firstName}</p>
+            )}
           </div>
-
 
           <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input id="lastName" placeholder="Enter your last name" />
+            <Label htmlFor="lastName">Last Name {errors.lastName && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
+            <Input 
+              id="lastName" 
+              value={formData.lastName}
+              onChange={handleInputChange}
+              placeholder="Enter your last name" 
+              className={errors.lastName ? "border-red-500" : ""}
+            />
+            {errors.lastName && (
+              <p className="text-red-500 text-xs">{errors.lastName}</p>
+            )}
           </div>
         </div>
 
-
         <div className="space-y-2">
-          <Label htmlFor="jobTitle">Job Title</Label>
-          <Input id="jobTitle" placeholder="Enter your job title" />
+          <Label htmlFor="jobTitle">Job Title {errors.jobTitle && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
+          <Input 
+            id="jobTitle" 
+            value={formData.jobTitle}
+            onChange={handleInputChange}
+            placeholder="Enter your job title" 
+            className={errors.jobTitle ? "border-red-500" : ""}
+          />
+          {errors.jobTitle && (
+            <p className="text-red-500 text-xs">{errors.jobTitle}</p>
+          )}
         </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="company">Company / Organization</Label>
-          <Input id="company" placeholder="Enter your company or organization" />
+          <Input 
+            id="company" 
+            value={formData.company}
+            onChange={handleInputChange}
+            placeholder="Enter your company or organization" 
+          />
         </div>
 
-
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="Enter your email address" />
+          <Label htmlFor="email">Email {errors.email && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="Enter your email address" 
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-xs">{errors.email}</p>
+          )}
         </div>
       </div>
 
       {/* Style Selector */}
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">Setting the Tone (Style Selector)</h3>
-      <div className="space-y-5 border-t pt-6">
-        <h3 className="text-base font-medium sm:text-lg">Setting the Tone (Style Selector)</h3>
-          <div className="space-y-3">
+        <div className="space-y-2">
+          <Label htmlFor="toneSlider">How do you want to come across?</Label>
           <div className="space-y-3">
             <input
               id="toneSlider"
               type="range"
               min="1"
               max="10"
-              defaultValue="5"
+              value={formData.toneValue}
+              onChange={handleInputChange}
               className="w-full"
             />
-            <div className="flex flex-wrap flex-wrap justify-between text-xs sm:text-xs sm:text-sm">
-              <span className="mr-1" className="mr-1">Friendly & Casual 😎</span>
-              <span className="mx-1 text-center" className="mx-1 text-center">Professional but Approachable 📢</span>
-              <span className="ml-1" className="ml-1">Straight to Business 💼</span>
             <div className="flex flex-wrap justify-between text-xs sm:text-sm">
               <span className="mr-1">Friendly & Casual 😎</span>
               <span className="mx-1 text-center">Professional but Approachable 📢</span>
               <span className="ml-1">Straight to Business 💼</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Personal Introduction */}
       <div className="space-y-5 border-t pt-6">
@@ -73,127 +251,178 @@ export function ExpandedProfileForm() {
           <Label htmlFor="introduction">Imagine you just walked into a room and someone introduces you. What do they say?</Label>
           <Input
             id="introduction"
+            value={formData.introduction}
+            onChange={handleInputChange}
             placeholder="Example: &quot;This is Sam—he&apos;s the guy who knows EVERYONE in tech!&quot;"
           />
         </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="superpower">What&apos;s your superpower?</Label>
           <select
             id="superpower"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            defaultValue=""
-            defaultValue=""
+            value={formData.superpower}
+            onChange={handleSelectChange}
           >
             <option value="" disabled>Select your superpower or type your own</option>
-            <option value="" disabled>Select your superpower or type your own</option>
+            <option value="connect">I connect people like a human LinkedIn 🔗</option>
+            <option value="ideas">I turn ideas into businesses 💡</option>
+            <option value="creative">I make things look (or sound) amazing 🎨🎙️</option>
+            <option value="problems">I solve impossible problems 🕵️</option>
             <option value="inspire">I inspire people to take action 🚀</option>
             <option value="vibes">I bring the good vibes 😎</option>
             <option value="other">Other (please specify below)</option>
           </select>
-          <Input id="otherSuperpower" placeholder="Enter your own superpower" className="mt-2" />
+          {formData.superpower === "other" && (
+            <Input 
+              id="otherSuperpower" 
+              value={formData.otherSuperpower}
+              onChange={handleInputChange}
+              placeholder="Enter your own superpower" 
+              className="mt-2" 
+            />
+          )}
         </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="funFact">What&apos;s a fun fact that makes people go, &quot;Wait…WHAT?!&quot;</Label>
           <Input
             id="funFact"
-            placeholder="Example: &quot;I once sold everything I owned and moved to Bali.&quot; 🌴"
+            value={formData.funFact}
+            onChange={handleInputChange}
             placeholder="Example: &quot;I once sold everything I owned and moved to Bali.&quot; 🌴"
           />
         </div>
-
-
-        <div className="space-y-2">
-          <Label htmlFor="industry">What industry or niche are you in?</Label>
-        </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="industry">What industry or niche are you in?</Label>
           <Input
             id="industry"
+            value={formData.industry}
+            onChange={handleInputChange}
             placeholder="Be specific! E.g., &quot;AI-powered marketing automation&quot;"
           />
           <p className="text-xs text-muted-foreground">
             Be specific! Instead of &quot;Fitness,&quot; say &quot;Strength training for busy professionals.&quot;
           </p>
         </div>
-
+      </div>
 
       {/* Skills and Value */}
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
+
+        <div className="space-y-2">
+          <Label htmlFor="mainValue">What&apos;s the ONE thing people should reach out to you for? {errors.mainValue && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
           <Input
             id="mainValue"
+            value={formData.mainValue}
+            onChange={handleInputChange}
             placeholder="Example: &quot;I help startups get their first 1,000 customers.&quot;"
+            className={errors.mainValue ? "border-red-500" : ""}
           />
-          <p className="text-xs text-muted-foreground">
-            Be specific! Make it clear exactly how you can help others.
-          </p>
+          {errors.mainValue ? (
+            <p className="text-red-500 text-xs">{errors.mainValue}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Be specific! Make it clear exactly how you can help others.
+            </p>
+          )}
         </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="secondaryValue">What&apos;s another way you bring value? (Optional)</Label>
           <Input
             id="secondaryValue"
+            value={formData.secondaryValue}
+            onChange={handleInputChange}
             placeholder="Example: &quot;I also advise on content marketing for B2B brands.&quot;"
           />
         </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="audience">Who do you LOVE helping the most?</Label>
           <select
             id="audience"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            defaultValue=""
-            defaultValue=""
+            value={formData.audience}
+            onChange={handleSelectChange}
           >
             <option value="" disabled>Select who you love helping most</option>
             <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
+            <option value="retention">Businesses struggling with customer retention 💰</option>
+            <option value="career">People looking for their next big career move 🎯</option>
+            <option value="likeminded">Just cool, like-minded people looking to connect 🤝</option>
+            <option value="other">Other (please specify below)</option>
           </select>
-          <Input id="otherAudience" placeholder="Enter who you love helping most" className="mt-2" />
+          {formData.audience === "other" && (
+            <Input 
+              id="otherAudience" 
+              value={formData.otherAudience}
+              onChange={handleInputChange}
+              placeholder="Enter who you love helping most" 
+              className="mt-2" 
+            />
+          )}
         </div>
       </div>
 
-
       {/* Your Ask Section */}
       <div className="space-y-5 border-t pt-6">
-        <div className="space-y-2">
-          <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
-          <p> Make it clear! Be specific about what you&apos;re looking for.</p>
-        </div>
+        <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
 
+        <div className="space-y-2">
+          <Label htmlFor="primaryAsk">Right now, what&apos;s the #1 thing you need help with?</Label>
+          <Input
+            id="primaryAsk"
+            value={formData.primaryAsk}
+            onChange={handleInputChange}
+            placeholder="Example: &quot;I&apos;m looking for beta testers for my AI tool&quot;"
+          />
+          <p className="text-xs text-muted-foreground">
+            Make it clear! Be specific about what you&apos;re looking for.
+          </p>
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="secondaryAsk">What&apos;s a secondary thing you&apos;d love support with? (Optional)</Label>
           <Input
             id="secondaryAsk"
+            value={formData.secondaryAsk}
+            onChange={handleInputChange}
             placeholder="Example: &quot;I need intros to potential angel investors&quot;"
           />
         </div>
-
 
         <div className="space-y-2">
           <Label htmlFor="contactMethod">What&apos;s the best way for someone to reach you?</Label>
           <Input
             id="contactMethod"
+            value={formData.contactMethod}
+            onChange={handleInputChange}
             placeholder="Social media, email, calendar link, or just &quot;DM me&quot;"
           />
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 border-t pt-6">
-        <Button type="button" variant="outline" className="w-full sm:w-auto">
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full sm:w-auto"
+          onClick={saveDraft}
+        >
           Save Draft
         </Button>
-        <Link href="/create-profile/interests" className="w-full sm:w-auto">
-          <Button type="button" className="w-full">Next: Interests & Skills</Button>
-        </Link>
+        <Button 
+          type="button" 
+          className="w-full sm:w-auto"
+          onClick={handleNextStep}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Next: Interests & Skills"}
+        </Button>
       </div>
     </div>
   );

@@ -1,18 +1,119 @@
-import Link from "next/link";
+"use client";
+
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function ScriptPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedScript, setGeneratedScript] = useState("");
+  const [editedScript, setEditedScript] = useState("");
+
+  // Load profile data from previous steps
+  useEffect(() => {
+    const loadProfileData = () => {
+      const savedData = sessionStorage.getItem('profileFormData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        setFormData(parsedData);
+        
+        // Generate initial script
+        generateScript(parsedData);
+      } else {
+        // If no data, go back to first step
+        router.push('/create-profile');
+      }
+      setIsLoading(false);
+    };
+    
+    const timer = setTimeout(loadProfileData, 500);
+    return () => clearTimeout(timer);
+  }, [router]);
+
+  // Function to generate a script based on form data
+  const generateScript = (data) => {
+    setIsGenerating(true);
+    
+    // In a real implementation, this would call an API with OpenAI/Anthropic
+    // For now, we'll simulate the generation with a timeout
+    setTimeout(() => {
+      const script = createScriptFromTemplate(data);
+      setGeneratedScript(script);
+      setEditedScript(script);
+      setIsGenerating(false);
+    }, 1500);
+  };
+
+  // Simple template-based script generation
+  const createScriptFromTemplate = (data) => {
+    if (!data) return "";
+    
+    const { firstName, lastName, jobTitle, company, mainValue, interests = [] } = data;
+    const interestsText = interests.length > 0 
+      ? `My areas of expertise include ${interests.slice(0, 3).join(', ')}`
+      : '';
+    
+    return `Hi, I'm ${firstName} ${lastName}, a ${jobTitle}${company ? ` at ${company}` : ''}.
+
+${mainValue || "I'm passionate about helping others succeed in their professional journeys."}
+
+${interestsText}${interestsText ? '.' : ''}
+
+I'd love to connect and explore how we might collaborate. Feel free to reach out!`;
+  };
+
+  // Handle script regeneration
+  const handleRegenerateScript = () => {
+    if (formData) {
+      generateScript(formData);
+    }
+  };
+
+  // Handle script editing
+  const handleScriptChange = (e) => {
+    setEditedScript(e.target.value);
+  };
+
+  // Continue to next step
+  const handleNextStep = () => {
+    // Save edited script to form data
+    const updatedFormData = {
+      ...formData,
+      generatedScript: editedScript
+    };
+    
+    // Save to session storage
+    sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
+    
+    // Navigate to next step
+    router.push('/create-profile/video');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl px-4 sm:px-6 py-8 sm:py-10 md:py-12 flex justify-center items-center min-h-[50vh]">
+        <div className="animate-pulse text-center">
+          <p className="text-muted-foreground">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container max-w-4xl py-12">
+    <div className="container max-w-4xl px-4 sm:px-6 py-8 sm:py-10 md:py-12">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Your AI-Generated Script</h1>
-          <p className="text-muted-foreground">
+        <div className="space-y-2 sm:space-y-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">Your AI-Generated Script</h1>
+          <p className="text-muted-foreground sm:text-lg">
             Review and edit your personalized video script below.
           </p>
         </div>
-        
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
+
+        <div className="rounded-xl border bg-card p-4 sm:p-6 shadow-sm">
           <div className="space-y-6">
             <div className="space-y-2">
               <h2 className="text-xl font-semibold">Script Preview</h2>
@@ -20,70 +121,75 @@ export default function ScriptPage() {
                 This script has been generated based on your profile information.
               </p>
             </div>
-            
-            <div className="rounded-md border bg-muted/20 p-6">
-              <blockquote className="italic">
-                <p>
-                  Hi, I&apos;m [Your Name], a [Job Title] at [Company]. With over [X] years of experience in [Skills], 
-                  I&apos;m passionate about [Interests] and have a proven track record of [Achievements].
-                </p>
-                <p className="mt-2">
-                  I&apos;m currently seeking [What You&apos;re Seeking] and would love to connect with [Ideal Connection].
-                </p>
-                <p className="mt-2">
-                  Let&apos;s explore how we might create value together. Feel free to reach out at [Email]!
-                </p>
-              </blockquote>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <Button variant="outline" className="w-full max-w-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-2 h-4 w-4"
-                  >
-                    <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    <path d="M14.5 9.5 16 7" />
-                    <path d="m16.5 11.5 2-1.5" />
-                    <path d="M14.5 14.5 16 17" />
-                    <path d="M10.5 14.5 9 17" />
-                    <path d="M8.5 11.5 6.5 10" />
-                    <path d="M10.5 9.5 9 7" />
-                    <path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Z" />
-                  </svg>
-                  Regenerate Script
-                </Button>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">Edit Script</h3>
-                <textarea
-                  className="flex h-48 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  defaultValue="Hi, I'm [Your Name], a [Job Title] at [Company]. With over [X] years of experience in [Skills], I'm passionate about [Interests] and have a proven track record of [Achievements].
 
-I'm currently seeking [What You're Seeking] and would love to connect with [Ideal Connection].
-
-Let's explore how we might create value together. Feel free to reach out at [Email]!"
-                />
+            {isGenerating ? (
+              <div className="flex flex-col items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                <p className="text-muted-foreground">Generating your personalized script...</p>
               </div>
-            </div>
-            
+            ) : (
+              <>
+                <div className="rounded-md border bg-muted/20 p-6">
+                  <blockquote className="italic whitespace-pre-line">
+                    {generatedScript}
+                  </blockquote>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="outline" 
+                      className="w-full max-w-md"
+                      onClick={handleRegenerateScript}
+                      disabled={isGenerating}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mr-2 h-4 w-4"
+                      >
+                        <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path d="M14.5 9.5 16 7" />
+                        <path d="m16.5 11.5 2-1.5" />
+                        <path d="M14.5 14.5 16 17" />
+                        <path d="M10.5 14.5 9 17" />
+                        <path d="M8.5 11.5 6.5 10" />
+                        <path d="M10.5 9.5 9 7" />
+                        <path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Z" />
+                      </svg>
+                      Regenerate Script
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Edit Script</h3>
+                    <textarea
+                      className="flex h-48 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={editedScript}
+                      onChange={handleScriptChange}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="flex justify-between">
               <Link href="/create-profile/interests">
                 <Button variant="outline">Back</Button>
               </Link>
-              <Link href="/create-profile/video">
-                <Button>Generate Video</Button>
-              </Link>
+              <Button 
+                onClick={handleNextStep}
+                disabled={isGenerating || !editedScript.trim()}
+              >
+                Next: Generate Video
+              </Button>
             </div>
           </div>
         </div>
