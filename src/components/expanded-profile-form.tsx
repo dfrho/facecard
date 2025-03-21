@@ -10,11 +10,14 @@ export function ExpandedProfileForm() {
       {/* Basic Information */}
       <div className="space-y-5">
         <h3 className="text-base font-medium sm:text-lg">Basic Information</h3>
+      <div className="space-y-5">
+        <h3 className="text-base font-medium sm:text-lg">Basic Information</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="firstName">First Name</Label>
             <Input id="firstName" placeholder="Enter your first name" />
           </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="lastName">Last Name</Label>
@@ -22,15 +25,18 @@ export function ExpandedProfileForm() {
           </div>
         </div>
 
+
         <div className="space-y-2">
           <Label htmlFor="jobTitle">Job Title</Label>
           <Input id="jobTitle" placeholder="Enter your job title" />
         </div>
 
+
         <div className="space-y-2">
           <Label htmlFor="company">Company / Organization</Label>
           <Input id="company" placeholder="Enter your company or organization" />
         </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -41,8 +47,11 @@ export function ExpandedProfileForm() {
       {/* Style Selector */}
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">Setting the Tone (Style Selector)</h3>
+      <div className="space-y-5 border-t pt-6">
+        <h3 className="text-base font-medium sm:text-lg">Setting the Tone (Style Selector)</h3>
         <div className="space-y-2">
           <Label htmlFor="toneSlider">How do you want to come across?</Label>
+          <div className="space-y-3">
           <div className="space-y-3">
             <input
               id="toneSlider"
@@ -52,10 +61,10 @@ export function ExpandedProfileForm() {
               defaultValue="5"
               className="w-full"
             />
-            <div className="flex flex-wrap justify-between text-xs sm:text-sm">
-              <span className="mr-1">Friendly & Casual 😎</span>
-              <span className="mx-1 text-center">Professional but Approachable 📢</span>
-              <span className="ml-1">Straight to Business 💼</span>
+            <div className="flex flex-wrap flex-wrap justify-between text-xs sm:text-xs sm:text-sm">
+              <span className="mr-1" className="mr-1">Friendly & Casual 😎</span>
+              <span className="mx-1 text-center" className="mx-1 text-center">Professional but Approachable 📢</span>
+              <span className="ml-1" className="ml-1">Straight to Business 💼</span>
             </div>
           </div>
         </div>
@@ -70,16 +79,23 @@ export function ExpandedProfileForm() {
           <Input
             id="introduction"
             placeholder="Example: &quot;This is Sam—he&apos;s the guy who knows EVERYONE in tech!&quot;"
+          <Input
+            id="introduction"
+            placeholder="Example: &quot;This is Sam—he&apos;s the guy who knows EVERYONE in tech!&quot;"
           />
         </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="superpower">What&apos;s your superpower?</Label>
           <select
+          <select
             id="superpower"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             defaultValue=""
+            defaultValue=""
           >
+            <option value="" disabled>Select your superpower or type your own</option>
             <option value="" disabled>Select your superpower or type your own</option>
             <option value="connect">I connect people like a human LinkedIn 🔗</option>
             <option value="ideas">I turn ideas into businesses 💡</option>
@@ -92,18 +108,22 @@ export function ExpandedProfileForm() {
           <Input id="otherSuperpower" placeholder="Enter your own superpower" className="mt-2" />
         </div>
 
+
         <div className="space-y-2">
           <Label htmlFor="funFact">What&apos;s a fun fact that makes people go, &quot;Wait…WHAT?!&quot;</Label>
           <Input
             id="funFact"
             placeholder="Example: &quot;I once sold everything I owned and moved to Bali.&quot; 🌴"
+            placeholder="Example: &quot;I once sold everything I owned and moved to Bali.&quot; 🌴"
           />
         </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="industry">What industry or niche are you in?</Label>
           <Input
             id="industry"
+            placeholder="Be specific! E.g., &quot;AI-powered marketing automation&quot;"
             placeholder="Be specific! E.g., &quot;AI-powered marketing automation&quot;"
           />
           <p className="text-xs text-muted-foreground">
@@ -112,7 +132,10 @@ export function ExpandedProfileForm() {
         </div>
       </div>
 
+
       {/* Skills and Value */}
+      <div className="space-y-5 border-t pt-6">
+        <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
 
@@ -127,6 +150,7 @@ export function ExpandedProfileForm() {
           </p>
         </div>
 
+
         <div className="space-y-2">
           <Label htmlFor="secondaryValue">What&apos;s another way you bring value? (Optional)</Label>
           <Input
@@ -135,13 +159,18 @@ export function ExpandedProfileForm() {
           />
         </div>
 
+
         <div className="space-y-2">
           <Label htmlFor="audience">Who do you LOVE helping the most?</Label>
+          <select
           <select
             id="audience"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             defaultValue=""
+            defaultValue=""
           >
+            <option value="" disabled>Select who you love helping most</option>
+            <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
             <option value="" disabled>Select who you love helping most</option>
             <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
             <option value="retention">Businesses struggling with customer retention 💰</option>
@@ -153,7 +182,10 @@ export function ExpandedProfileForm() {
         </div>
       </div>
 
+
       {/* Your Ask Section */}
+      <div className="space-y-5 border-t pt-6">
+        <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
 
@@ -165,8 +197,10 @@ export function ExpandedProfileForm() {
           />
           <p className="text-xs text-muted-foreground">
             Make it clear! Be specific about what you&apos;re looking for.
+            Make it clear! Be specific about what you&apos;re looking for.
           </p>
         </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="secondaryAsk">What&apos;s a secondary thing you&apos;d love support with? (Optional)</Label>
@@ -176,6 +210,7 @@ export function ExpandedProfileForm() {
           />
         </div>
 
+
         <div className="space-y-2">
           <Label htmlFor="contactMethod">What&apos;s the best way for someone to reach you?</Label>
           <Input
@@ -184,6 +219,9 @@ export function ExpandedProfileForm() {
           />
         </div>
       </div>
+
+      <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 border-t pt-6">
+        <Button type="button" variant="outline" className="w-full sm:w-auto">
 
       <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 border-t pt-6">
         <Button type="button" variant="outline" className="w-full sm:w-auto">
