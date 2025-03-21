@@ -87,7 +87,6 @@ export function ExpandedProfileForm() {
             defaultValue=""
           >
             <option value="" disabled>Select your superpower or type your own</option>
-          >
             <option value="" disabled>Select your superpower or type your own</option>
             <option value="inspire">I inspire people to take action 🚀</option>
             <option value="vibes">I bring the good vibes 😎</option>
@@ -109,7 +108,6 @@ export function ExpandedProfileForm() {
 
         <div className="space-y-2">
           <Label htmlFor="industry">What industry or niche are you in?</Label>
-          />
         </div>
 
 
@@ -126,9 +124,6 @@ export function ExpandedProfileForm() {
 
 
       {/* Skills and Value */}
-      <div className="space-y-5 border-t pt-6">
-        <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
-      <div className="space-y-5 border-t pt-6">
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
           <Input
@@ -160,9 +155,6 @@ export function ExpandedProfileForm() {
           >
             <option value="" disabled>Select who you love helping most</option>
             <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
-          >
-            <option value="" disabled>Select who you love helping most</option>
-            <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
           </select>
           <Input id="otherAudience" placeholder="Enter who you love helping most" className="mt-2" />
         </div>
@@ -171,18 +163,9 @@ export function ExpandedProfileForm() {
 
       {/* Your Ask Section */}
       <div className="space-y-5 border-t pt-6">
-        <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
-      <div className="space-y-5 border-t pt-6">
-        <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
-
         <div className="space-y-2">
-          <Label htmlFor="primaryAsk">Right now, what&apos;s the #1 thing you need help with?</Label>
-          <Input
-      <div className="space-y-5 border-t pt-6">
-        <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
-            Make it clear! Be specific about what you&apos;re looking for.
-            Make it clear! Be specific about what you&apos;re looking for.
-          </p>
+          <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
+          <p> Make it clear! Be specific about what you&apos;re looking for.</p>
         </div>
 
 
