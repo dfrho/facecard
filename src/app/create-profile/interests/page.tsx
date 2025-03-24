@@ -2,20 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ProfileFormData } from "@/types/profile";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function InterestsPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<ProfileFormData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedInterests, setSelectedInterests] = useState([]);
-  
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+
   // Available interests to choose from
   const availableInterests = [
-    "Artificial Intelligence", "Marketing", "Finance", "Design", 
-    "Product Management", "Sales", "Business Development", 
+    "Artificial Intelligence", "Marketing", "Finance", "Design",
+    "Product Management", "Sales", "Business Development",
     "Leadership", "Venture Capital", "Startups", "E-commerce",
     "Data Science", "Mobile Development", "Web Development",
     "Public Speaking", "Writing", "Creative Direction",
@@ -34,12 +35,12 @@ export default function InterestsPage() {
       }
       setIsLoading(false);
     };
-    
+
     const timer = setTimeout(loadProfileData, 300);
     return () => clearTimeout(timer);
   }, [router]);
 
-  const toggleInterest = (interest) => {
+  const toggleInterest = (interest: string) => {
     setSelectedInterests(prev => {
       if (prev.includes(interest)) {
         return prev.filter(item => item !== interest);
@@ -50,29 +51,33 @@ export default function InterestsPage() {
   };
 
   const handleNextStep = () => {
+    if (!formData) return;
+
     // Combine previous form data with interests
-    const updatedFormData = {
+    const updatedFormData: ProfileFormData = {
       ...formData,
       interests: selectedInterests
     };
-    
+
     // Save to session storage
     sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
-    
+
     // Navigate to next step
     router.push('/create-profile/script');
   };
 
   const handleBackStep = () => {
+    if (!formData) return;
+    
     // Save selected interests before going back
-    const updatedFormData = {
+    const updatedFormData: ProfileFormData = {
       ...formData,
       interests: selectedInterests
     };
-    
+
     // Update session storage
     sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
-    
+
     // Go back to previous step
     router.push('/create-profile');
   };

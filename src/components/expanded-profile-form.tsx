@@ -1,142 +1,143 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ProfileFormData, FormErrors } from '@/types/profile';
+import Link from 'next/link';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function ExpandedProfileForm() {
   const router = useRouter();
-  
+
   // State to manage form data
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>({
     // Basic Information
-    firstName: "",
-    lastName: "",
-    jobTitle: "",
-    company: "",
-    email: "",
-    
+    firstName: '',
+    lastName: '',
+    jobTitle: '',
+    company: '',
+    email: '',
+
     // Style/Tone
     toneValue: 5,
-    
+
     // Personal Introduction
-    introduction: "",
-    superpower: "",
-    otherSuperpower: "",
-    funFact: "",
-    industry: "",
-    
+    introduction: '',
+    superpower: '',
+    otherSuperpower: '',
+    funFact: '',
+    industry: '',
+
     // Skills and Value
-    mainValue: "",
-    secondaryValue: "",
-    audience: "",
-    otherAudience: "",
-    
+    mainValue: '',
+    secondaryValue: '',
+    audience: '',
+    otherAudience: '',
+
     // Your Ask
-    primaryAsk: "",
-    secondaryAsk: "",
-    contactMethod: ""
+    primaryAsk: '',
+    secondaryAsk: '',
+    contactMethod: '',
   });
-  
+
   // State for form validation
-  const [errors, setErrors] = useState({});
-  
+  const [errors, setErrors] = useState<FormErrors>({});
+
   // State for loading/submitting
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Handle input changes
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [id]: value
+      [id]: value,
     }));
-    
     // Clear error for this field when user types
     if (errors[id]) {
       setErrors(prev => ({
         ...prev,
-        [id]: ""
+        [id]: '',
       }));
     }
   };
-  
+
   // Handle select changes
-  const handleSelectChange = (e) => {
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [id]: value
+      [id]: value,
     }));
-    
+
     // Clear error for this field when user selects
     if (errors[id]) {
       setErrors(prev => ({
         ...prev,
-        [id]: ""
+        [id]: '',
       }));
     }
   };
-  
+
   // Save form data as draft
   const saveDraft = () => {
     // Save to localStorage for persistence
-    localStorage.setItem("profileFormDraft", JSON.stringify(formData));
-    alert("Draft saved successfully!");
+    localStorage.setItem('profileFormDraft', JSON.stringify(formData));
+    alert('Draft saved successfully!');
   };
-  
+
   // Validate form before submission
-  const validateForm = () => {
-    const newErrors = {};
-    
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
     // Required fields validation
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!formData.jobTitle.trim()) newErrors.jobTitle = "Job title is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Email format is invalid";
-    
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = 'Email format is invalid';
+
     // At least one value proposition is required
-    if (!formData.mainValue.trim()) newErrors.mainValue = "Please share what people can reach out to you for";
-    
+    if (!formData.mainValue.trim())
+      newErrors.mainValue = 'Please share what people can reach out to you for';
+
     // Set the errors
     setErrors(newErrors);
-    
+
     // Return true if no errors
     return Object.keys(newErrors).length === 0;
   };
-  
+
   // Handle form submission to next step
   const handleNextStep = () => {
     if (validateForm()) {
       // Save current form data to localStorage
-      localStorage.setItem("profileFormData", JSON.stringify(formData));
-      
+      localStorage.setItem('profileFormData', JSON.stringify(formData));
+
       // Save to session storage too for sharing between pages
-      sessionStorage.setItem("profileFormData", JSON.stringify(formData));
-      
+      sessionStorage.setItem('profileFormData', JSON.stringify(formData));
+
       // Navigate to next step
-      router.push("/create-profile/interests");
+      router.push('/create-profile/interests');
     } else {
       // Scroll to first error
       const firstErrorField = Object.keys(errors)[0];
       const element = document.getElementById(firstErrorField);
       if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
   };
-  
+
   // Load saved draft or persisted data on component mount
   React.useEffect(() => {
     // Try to load from sessionStorage first (for navigation between steps)
-    const sessionData = sessionStorage.getItem("profileFormData");
+    const sessionData = sessionStorage.getItem('profileFormData');
     // Then try localStorage (for saved drafts)
-    const savedDraft = localStorage.getItem("profileFormDraft");
-    
+    const savedDraft = localStorage.getItem('profileFormDraft');
+
     if (sessionData) {
       setFormData(JSON.parse(sessionData));
     } else if (savedDraft) {
@@ -151,71 +152,71 @@ export function ExpandedProfileForm() {
         <h3 className="text-base font-medium sm:text-lg">Basic Information</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="firstName">First Name {errors.firstName && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
-            <Input 
-              id="firstName" 
+            <Label htmlFor="firstName">
+              First Name {errors.firstName && <span className="text-red-500 text-sm ml-1">*</span>}
+            </Label>
+            <Input
+              id="firstName"
               value={formData.firstName}
               onChange={handleInputChange}
-              placeholder="Enter your first name" 
-              className={errors.firstName ? "border-red-500" : ""}
+              placeholder="Enter your first name"
+              className={errors.firstName ? 'border-red-500' : ''}
             />
-            {errors.firstName && (
-              <p className="text-red-500 text-xs">{errors.firstName}</p>
-            )}
+            {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name {errors.lastName && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
-            <Input 
-              id="lastName" 
+            <Label htmlFor="lastName">
+              Last Name {errors.lastName && <span className="text-red-500 text-sm ml-1">*</span>}
+            </Label>
+            <Input
+              id="lastName"
               value={formData.lastName}
               onChange={handleInputChange}
-              placeholder="Enter your last name" 
-              className={errors.lastName ? "border-red-500" : ""}
+              placeholder="Enter your last name"
+              className={errors.lastName ? 'border-red-500' : ''}
             />
-            {errors.lastName && (
-              <p className="text-red-500 text-xs">{errors.lastName}</p>
-            )}
+            {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="jobTitle">Job Title {errors.jobTitle && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
-          <Input 
-            id="jobTitle" 
+          <Label htmlFor="jobTitle">
+            Job Title {errors.jobTitle && <span className="text-red-500 text-sm ml-1">*</span>}
+          </Label>
+          <Input
+            id="jobTitle"
             value={formData.jobTitle}
             onChange={handleInputChange}
-            placeholder="Enter your job title" 
-            className={errors.jobTitle ? "border-red-500" : ""}
+            placeholder="Enter your job title"
+            className={errors.jobTitle ? 'border-red-500' : ''}
           />
-          {errors.jobTitle && (
-            <p className="text-red-500 text-xs">{errors.jobTitle}</p>
-          )}
+          {errors.jobTitle && <p className="text-red-500 text-xs">{errors.jobTitle}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="company">Company / Organization</Label>
-          <Input 
-            id="company" 
+          <Input
+            id="company"
             value={formData.company}
             onChange={handleInputChange}
-            placeholder="Enter your company or organization" 
+            placeholder="Enter your company or organization"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email {errors.email && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
-          <Input 
-            id="email" 
-            type="email" 
+          <Label htmlFor="email">
+            Email {errors.email && <span className="text-red-500 text-sm ml-1">*</span>}
+          </Label>
+          <Input
+            id="email"
+            type="email"
             value={formData.email}
             onChange={handleInputChange}
-            placeholder="Enter your email address" 
-            className={errors.email ? "border-red-500" : ""}
+            placeholder="Enter your email address"
+            className={errors.email ? 'border-red-500' : ''}
           />
-          {errors.email && (
-            <p className="text-red-500 text-xs">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
         </div>
       </div>
 
@@ -248,12 +249,14 @@ export function ExpandedProfileForm() {
         <h3 className="text-base font-medium sm:text-lg">Who&apos;s That? Oh, It&apos;s YOU!</h3>
 
         <div className="space-y-2">
-          <Label htmlFor="introduction">Imagine you just walked into a room and someone introduces you. What do they say?</Label>
+          <Label htmlFor="introduction">
+            Imagine you just walked into a room and someone introduces you. What do they say?
+          </Label>
           <Input
             id="introduction"
             value={formData.introduction}
             onChange={handleInputChange}
-            placeholder="Example: &quot;This is Sam—he&apos;s the guy who knows EVERYONE in tech!&quot;"
+            placeholder='Example: "This is Sam—he&apos;s the guy who knows EVERYONE in tech!"'
           />
         </div>
 
@@ -265,7 +268,9 @@ export function ExpandedProfileForm() {
             value={formData.superpower}
             onChange={handleSelectChange}
           >
-            <option value="" disabled>Select your superpower or type your own</option>
+            <option value="" disabled>
+              Select your superpower or type your own
+            </option>
             <option value="connect">I connect people like a human LinkedIn 🔗</option>
             <option value="ideas">I turn ideas into businesses 💡</option>
             <option value="creative">I make things look (or sound) amazing 🎨🎙️</option>
@@ -274,24 +279,26 @@ export function ExpandedProfileForm() {
             <option value="vibes">I bring the good vibes 😎</option>
             <option value="other">Other (please specify below)</option>
           </select>
-          {formData.superpower === "other" && (
-            <Input 
-              id="otherSuperpower" 
+          {formData.superpower === 'other' && (
+            <Input
+              id="otherSuperpower"
               value={formData.otherSuperpower}
               onChange={handleInputChange}
-              placeholder="Enter your own superpower" 
-              className="mt-2" 
+              placeholder="Enter your own superpower"
+              className="mt-2"
             />
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="funFact">What&apos;s a fun fact that makes people go, &quot;Wait…WHAT?!&quot;</Label>
+          <Label htmlFor="funFact">
+            What&apos;s a fun fact that makes people go, &quot;Wait…WHAT?!&quot;
+          </Label>
           <Input
             id="funFact"
             value={formData.funFact}
             onChange={handleInputChange}
-            placeholder="Example: &quot;I once sold everything I owned and moved to Bali.&quot; 🌴"
+            placeholder='Example: "I once sold everything I owned and moved to Bali." 🌴'
           />
         </div>
 
@@ -301,26 +308,32 @@ export function ExpandedProfileForm() {
             id="industry"
             value={formData.industry}
             onChange={handleInputChange}
-            placeholder="Be specific! E.g., &quot;AI-powered marketing automation&quot;"
+            placeholder='Be specific! E.g., "AI-powered marketing automation"'
           />
           <p className="text-xs text-muted-foreground">
-            Be specific! Instead of &quot;Fitness,&quot; say &quot;Strength training for busy professionals.&quot;
+            Be specific! Instead of &quot;Fitness,&quot; say &quot;Strength training for busy
+            professionals.&quot;
           </p>
         </div>
       </div>
 
       {/* Skills and Value */}
       <div className="space-y-5 border-t pt-6">
-        <h3 className="text-base font-medium sm:text-lg">What&apos;s Your Magic? (Aka, How Can You Help?)</h3>
+        <h3 className="text-base font-medium sm:text-lg">
+          What&apos;s Your Magic? (Aka, How Can You Help?)
+        </h3>
 
         <div className="space-y-2">
-          <Label htmlFor="mainValue">What&apos;s the ONE thing people should reach out to you for? {errors.mainValue && <span className="text-red-500 text-sm ml-1">*</span>}</Label>
+          <Label htmlFor="mainValue">
+            What&apos;s the ONE thing people should reach out to you for?{' '}
+            {errors.mainValue && <span className="text-red-500 text-sm ml-1">*</span>}
+          </Label>
           <Input
             id="mainValue"
             value={formData.mainValue}
             onChange={handleInputChange}
-            placeholder="Example: &quot;I help startups get their first 1,000 customers.&quot;"
-            className={errors.mainValue ? "border-red-500" : ""}
+            placeholder='Example: "I help startups get their first 1,000 customers."'
+            className={errors.mainValue ? 'border-red-500' : ''}
           />
           {errors.mainValue ? (
             <p className="text-red-500 text-xs">{errors.mainValue}</p>
@@ -332,12 +345,14 @@ export function ExpandedProfileForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="secondaryValue">What&apos;s another way you bring value? (Optional)</Label>
+          <Label htmlFor="secondaryValue">
+            What&apos;s another way you bring value? (Optional)
+          </Label>
           <Input
             id="secondaryValue"
             value={formData.secondaryValue}
             onChange={handleInputChange}
-            placeholder="Example: &quot;I also advise on content marketing for B2B brands.&quot;"
+            placeholder='Example: "I also advise on content marketing for B2B brands."'
           />
         </div>
 
@@ -349,20 +364,24 @@ export function ExpandedProfileForm() {
             value={formData.audience}
             onChange={handleSelectChange}
           >
-            <option value="" disabled>Select who you love helping most</option>
-            <option value="aspiring">Aspiring entrepreneurs who don&apos;t know where to start 🚀</option>
+            <option value="" disabled>
+              Select who you love helping most
+            </option>
+            <option value="aspiring">
+              Aspiring entrepreneurs who don&apos;t know where to start 🚀
+            </option>
             <option value="retention">Businesses struggling with customer retention 💰</option>
             <option value="career">People looking for their next big career move 🎯</option>
             <option value="likeminded">Just cool, like-minded people looking to connect 🤝</option>
             <option value="other">Other (please specify below)</option>
           </select>
-          {formData.audience === "other" && (
-            <Input 
-              id="otherAudience" 
+          {formData.audience === 'other' && (
+            <Input
+              id="otherAudience"
               value={formData.otherAudience}
               onChange={handleInputChange}
-              placeholder="Enter who you love helping most" 
-              className="mt-2" 
+              placeholder="Enter who you love helping most"
+              className="mt-2"
             />
           )}
         </div>
@@ -373,12 +392,14 @@ export function ExpandedProfileForm() {
         <h3 className="text-base font-medium sm:text-lg">Your Ask – What You Need Help With</h3>
 
         <div className="space-y-2">
-          <Label htmlFor="primaryAsk">Right now, what&apos;s the #1 thing you need help with?</Label>
+          <Label htmlFor="primaryAsk">
+            Right now, what&apos;s the #1 thing you need help with?
+          </Label>
           <Input
             id="primaryAsk"
             value={formData.primaryAsk}
             onChange={handleInputChange}
-            placeholder="Example: &quot;I&apos;m looking for beta testers for my AI tool&quot;"
+            placeholder='Example: "I&apos;m looking for beta testers for my AI tool"'
           />
           <p className="text-xs text-muted-foreground">
             Make it clear! Be specific about what you&apos;re looking for.
@@ -386,12 +407,14 @@ export function ExpandedProfileForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="secondaryAsk">What&apos;s a secondary thing you&apos;d love support with? (Optional)</Label>
+          <Label htmlFor="secondaryAsk">
+            What&apos;s a secondary thing you&apos;d love support with? (Optional)
+          </Label>
           <Input
             id="secondaryAsk"
             value={formData.secondaryAsk}
             onChange={handleInputChange}
-            placeholder="Example: &quot;I need intros to potential angel investors&quot;"
+            placeholder='Example: "I need intros to potential angel investors"'
           />
         </div>
 
@@ -401,27 +424,22 @@ export function ExpandedProfileForm() {
             id="contactMethod"
             value={formData.contactMethod}
             onChange={handleInputChange}
-            placeholder="Social media, email, calendar link, or just &quot;DM me&quot;"
+            placeholder='Social media, email, calendar link, or just "DM me"'
           />
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 border-t pt-6">
-        <Button 
-          type="button" 
-          variant="outline" 
-          className="w-full sm:w-auto"
-          onClick={saveDraft}
-        >
+        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={saveDraft}>
           Save Draft
         </Button>
-        <Button 
-          type="button" 
+        <Button
+          type="button"
           className="w-full sm:w-auto"
           onClick={handleNextStep}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Saving..." : "Next: Interests & Skills"}
+          {isSubmitting ? 'Saving...' : 'Next: Interests & Skills'}
         </Button>
       </div>
     </div>
