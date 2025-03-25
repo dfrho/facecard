@@ -1,6 +1,7 @@
 "use client";
 
 import { ExpandedProfileForm } from "@/components/expanded-profile-form";
+import { loadFormData } from "@/lib/form-utils";
 import { useState, useEffect } from "react";
 
 export default function CreateProfilePage() {
@@ -9,10 +10,16 @@ export default function CreateProfilePage() {
   // Check if we have stored form data on page load
   useEffect(() => {
     const checkStoredData = () => {
-      const hasStoredData = localStorage.getItem('profileFormDraft') || sessionStorage.getItem('profileFormData');
-      setIsLoading(false);
+      try {
+        const storedData = loadFormData();
+        // Data exists if loadFormData returns non-null
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking stored data:', error);
+        setIsLoading(false);
+      }
     };
-    
+
     // Small delay to prevent flash of loading state
     const timer = setTimeout(checkStoredData, 300);
     return () => clearTimeout(timer);

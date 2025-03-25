@@ -16,85 +16,94 @@ export default function ScriptPage() {
   const [generatedScript, setGeneratedScript] = useState("");
   const [editedScript, setEditedScript] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load profile data from previous steps
   useEffect(() => {
-    const loadProfileData = () => {
-      const savedData = sessionStorage.getItem('profileFormData');
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        setFormData(parsedData);
+    const loadProfileData = async () => {
+      try {
+        // Use the form utility to load data
+        const storedData = loadFormData();
         
-        // Generate initial script
-        generateScript(parsedData);
-      } else {
-        // If no data, go back to first step
-        router.push('/create-profile');
+        if (storedData) {
+          setFormData(storedData);
+          
+          // If there's already a generated script, use it
+          if (storedData.generatedScript) {
+            setGeneratedScript(storedData.generatedScript);
+            setEditedScript(storedData.generatedScript);
+            setIsLoading(false);
+          } else {
+            // Otherwise generate a new script
+            await generateScriptFromProfile(storedData);
+          }
+        } else {
+          // If no data, go back to first step
+          router.push('/create-profile');
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+        setError('Failed to load profile data. Please go back and try again.');
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
-    
-    const timer = setTimeout(loadProfileData, 500);
-    return () => clearTimeout(timer);
+
+    loadProfileData();
   }, [router]);
 
   // Function to generate a script based on form data
-  const generateScript = (data) => {
+  const generateScriptFromProfile = async (data: ProfileFormData) => {
     setIsGenerating(true);
+    setError(null);
     
-    // In a real implementation, this would call an API with OpenAI/Anthropic
-    // For now, we'll simulate the generation with a timeout
-    setTimeout(() => {
-      const script = createScriptFromTemplate(data);
+    try {
+      // Call our script generation service
+      const script = await generateScript(data);
       setGeneratedScript(script);
       setEditedScript(script);
+    } catch (error) {
+      console.error('Error generating script:', error);
+      setError('Failed to generate script. Please try again.');
+    } finally {
       setIsGenerating(false);
-    }, 1500);
-  };
-
-  // Simple template-based script generation
-  const createScriptFromTemplate = (data) => {
-    if (!data) return "";
-    
-    const { firstName, lastName, jobTitle, company, mainValue, interests = [] } = data;
-    const interestsText = interests.length > 0 
-      ? `My areas of expertise include ${interests.slice(0, 3).join(', ')}`
-      : '';
-    
-    return `Hi, I'm ${firstName} ${lastName}, a ${jobTitle}${company ? ` at ${company}` : ''}.
-
-${mainValue || "I'm passionate about helping others succeed in their professional journeys."}
-
-${interestsText}${interestsText ? '.' : ''}
-
-I'd love to connect and explore how we might collaborate. Feel free to reach out!`;
+      setIsLoading(false);
+    }
   };
 
   // Handle script regeneration
-  const handleRegenerateScript = () => {
+  const handleRegenerateScript = async () => {
     if (formData) {
-      generateScript(formData);
+      await generateScriptFromProfile(formData);
     }
   };
 
   // Handle script editing
-  const handleScriptChange = (e) => {
+  const handleScriptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditedScript(e.target.value);
   };
 
   // Continue to next step
   const handleNextStep = () => {
-    // Save edited script to form data
-    const updatedFormData = {
-      ...formData,
-      generatedScript: editedScript
-    };
+    if (!formData) return;
     
-    // Save to session storage
-    sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
+    setIsSubmitting(true);
     
-    // Navigate to next step
-    router.push('/create-profile/video');
+    try {
+      // Add the edited script to the form data
+      const updatedFormData = mergeFormData(formData, {
+        generatedScript: editedScript
+      });
+      
+      // Save to storage
+      saveFormData(updatedFormData);
+      
+      // Navigate to next step
+      router.push('/create-profile/video');
+    } catch (error) {
+      console.error('Error saving script:', error);
+      setError('Failed to save script. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -125,6 +134,16 @@ I'd love to connect and explore how we might collaborate. Feel free to reach out
                 This script has been generated based on your profile information.
               </p>
             </div>
+            
+            {error && (
+              <div className="rounded-md bg-red-50 p-4 mb-6">
+                <div className="flex">
+                  <div className="text-sm text-red-700">
+                    <p>{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {isGenerating ? (
               <div className="flex flex-col items-center justify-center p-8">
@@ -141,8 +160,8 @@ I'd love to connect and explore how we might collaborate. Feel free to reach out
 
                 <div className="space-y-4">
                   <div className="flex justify-center">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full max-w-md"
                       onClick={handleRegenerateScript}
                       disabled={isGenerating}
@@ -188,11 +207,11 @@ I'd love to connect and explore how we might collaborate. Feel free to reach out
               <Link href="/create-profile/interests">
                 <Button variant="outline">Back</Button>
               </Link>
-              <Button 
+              <Button
                 onClick={handleNextStep}
-                disabled={isGenerating || !editedScript.trim()}
+                disabled={isGenerating || !editedScript.trim() || isSubmitting}
               >
-                Next: Generate Video
+                {isSubmitting ? 'Saving...' : 'Next: Generate Video'}
               </Button>
             </div>
           </div>

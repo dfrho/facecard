@@ -11,6 +11,7 @@ import {
   loadFormData, 
   validateFormData 
 } from '@/lib/form-utils';
+import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -28,28 +29,6 @@ export function ExpandedProfileForm() {
   
   // State for showing save confirmation
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
-
-  // Load saved draft or persisted data on component mount
-  useEffect(() => {
-    const loadSavedData = () => {
-      try {
-        const storedData = loadFormData();
-        if (storedData) {
-          // Ensure toneValue is a number
-          if (storedData.toneValue) {
-            storedData.toneValue = Number(storedData.toneValue);
-          }
-          setFormData(storedData);
-        }
-      } catch (error) {
-        console.error('Error loading saved form data:', error);
-        // If there's an error parsing the JSON, use the default form data
-        setFormData(defaultFormData);
-      }
-    };
-
-    loadSavedData();
-  }, []);
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -115,48 +94,23 @@ export function ExpandedProfileForm() {
 
   // Custom validation function that extends our utility validation
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const newErrors: FormErrors = validateFormData(formData);
 
-    // Required fields validation with improved checks
-    if (!formData.firstName?.trim()) {
-      newErrors.firstName = 'First name is required';
-    } else if (formData.firstName.length > 50) {
+    // Additional validations can be added here if needed
+    if (formData.firstName?.length > 50) {
       newErrors.firstName = 'First name must be under 50 characters';
     }
 
-    if (!formData.lastName?.trim()) {
-      newErrors.lastName = 'Last name is required';
-    } else if (formData.lastName.length > 50) {
+    if (formData.lastName?.length > 50) {
       newErrors.lastName = 'Last name must be under 50 characters';
     }
 
-    if (!formData.jobTitle?.trim()) {
-      newErrors.jobTitle = 'Job title is required';
-    } else if (formData.jobTitle.length > 100) {
+    if (formData.jobTitle?.length > 100) {
       newErrors.jobTitle = 'Job title must be under 100 characters';
     }
 
-    if (!formData.email?.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email format is invalid';
-    }
-
-    // At least one value proposition is required
-    if (!formData.mainValue?.trim()) {
-      newErrors.mainValue = 'Please share what people can reach out to you for';
-    } else if (formData.mainValue.length > 200) {
+    if (formData.mainValue?.length > 200) {
       newErrors.mainValue = 'Please keep your main value under 200 characters';
-    }
-
-    // If industry is provided, validate length
-    if (formData.industry?.trim() && formData.industry.length > 100) {
-      newErrors.industry = 'Industry description must be under 100 characters';
-    }
-
-    // If fun fact is provided, validate length
-    if (formData.funFact?.trim() && formData.funFact.length > 200) {
-      newErrors.funFact = 'Fun fact must be under 200 characters';
     }
 
     // Set the errors
@@ -191,6 +145,34 @@ export function ExpandedProfileForm() {
       setIsSubmitting(false);
     }
   };
+
+  // Load saved draft or persisted data on component mount
+  useEffect(() => {
+    const loadSavedData = () => {
+      try {
+        const storedData = loadFormData();
+        if (storedData) {
+          // Ensure toneValue is a number
+          if (storedData.toneValue) {
+            storedData.toneValue = Number(storedData.toneValue);
+          }
+          setFormData(storedData);
+        }
+      } catch (error) {
+        console.error('Error loading saved form data:', error);
+        // If there's an error parsing the JSON, use the default form data
+        setFormData(defaultFormData);
+      }
+    };
+
+    loadSavedData();
+  }, []);
+
+  // Determine if we should show the otherSuperpower input
+  const showOtherSuperpower = formData.superpower === 'other';
+  
+  // Determine if we should show the otherAudience input
+  const showOtherAudience = formData.audience === 'other';
 
   return (
     <div className="space-y-8">
@@ -271,10 +253,10 @@ export function ExpandedProfileForm() {
       <div className="space-y-5 border-t pt-6">
         <h3 className="text-base font-medium sm:text-lg">Setting the Tone (Style Selector)</h3>
         <div className="space-y-2">
-          <Label htmlFor="toneSlider">How do you want to come across?</Label>
+          <Label htmlFor="toneValue">How do you want to come across?</Label>
           <div className="space-y-3">
             <input
-              id="toneSlider"
+              id="toneValue"
               type="range"
               min="1"
               max="10"
@@ -326,7 +308,7 @@ export function ExpandedProfileForm() {
             <option value="vibes">I bring the good vibes 😎</option>
             <option value="other">Other (please specify below)</option>
           </select>
-          {formData.superpower === 'other' && (
+          {showOtherSuperpower && (
             <Input
               id="otherSuperpower"
               value={formData.otherSuperpower}
@@ -347,7 +329,6 @@ export function ExpandedProfileForm() {
             onChange={handleInputChange}
             placeholder='Example: "I once sold everything I owned and moved to Bali." 🌴'
           />
-          {errors.funFact && <p className="text-red-500 text-xs">{errors.funFact}</p>}
         </div>
 
         <div className="space-y-2">
@@ -362,7 +343,6 @@ export function ExpandedProfileForm() {
             Be specific! Instead of &quot;Fitness,&quot; say &quot;Strength training for busy
             professionals.&quot;
           </p>
-          {errors.industry && <p className="text-red-500 text-xs">{errors.industry}</p>}
         </div>
       </div>
 
@@ -424,7 +404,7 @@ export function ExpandedProfileForm() {
             <option value="likeminded">Just cool, like-minded people looking to connect 🤝</option>
             <option value="other">Other (please specify below)</option>
           </select>
-          {formData.audience === 'other' && (
+          {showOtherAudience && (
             <Input
               id="otherAudience"
               value={formData.otherAudience}
