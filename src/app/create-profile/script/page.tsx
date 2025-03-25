@@ -1,17 +1,21 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { ProfileFormData } from "@/types/profile";
+import { loadFormData, saveFormData, mergeFormData } from "@/lib/form-utils";
+import { generateScript } from "@/lib/openai-service";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function ScriptPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState<ProfileFormData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedScript, setGeneratedScript] = useState("");
   const [editedScript, setEditedScript] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   // Load profile data from previous steps
   useEffect(() => {

@@ -4,57 +4,70 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ProfileFormData, FormErrors } from '@/types/profile';
-import Link from 'next/link';
-import React, { useState } from 'react';
+import { 
+  defaultFormData, 
+  saveFormDraft, 
+  saveFormData, 
+  loadFormData, 
+  validateFormData 
+} from '@/lib/form-utils';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function ExpandedProfileForm() {
   const router = useRouter();
 
   // State to manage form data
-  const [formData, setFormData] = useState<ProfileFormData>({
-    // Basic Information
-    firstName: '',
-    lastName: '',
-    jobTitle: '',
-    company: '',
-    email: '',
-
-    // Style/Tone
-    toneValue: 5,
-
-    // Personal Introduction
-    introduction: '',
-    superpower: '',
-    otherSuperpower: '',
-    funFact: '',
-    industry: '',
-
-    // Skills and Value
-    mainValue: '',
-    secondaryValue: '',
-    audience: '',
-    otherAudience: '',
-
-    // Your Ask
-    primaryAsk: '',
-    secondaryAsk: '',
-    contactMethod: '',
-  });
+  const [formData, setFormData] = useState<ProfileFormData>(defaultFormData);
 
   // State for form validation
   const [errors, setErrors] = useState<FormErrors>({});
 
   // State for loading/submitting
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // State for showing save confirmation
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+
+  // Load saved draft or persisted data on component mount
+  useEffect(() => {
+    const loadSavedData = () => {
+      try {
+        const storedData = loadFormData();
+        if (storedData) {
+          // Ensure toneValue is a number
+          if (storedData.toneValue) {
+            storedData.toneValue = Number(storedData.toneValue);
+          }
+          setFormData(storedData);
+        }
+      } catch (error) {
+        console.error('Error loading saved form data:', error);
+        // If there's an error parsing the JSON, use the default form data
+        setFormData(defaultFormData);
+      }
+    };
+
+    loadSavedData();
+  }, []);
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value,
-    }));
+    const { id, value, type } = e.target;
+
+    // Handle numeric inputs (like range sliders)
+    if (type === 'range' || type === 'number') {
+      setFormData(prev => ({
+        ...prev,
+        [id]: Number(value),
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [id]: value,
+      }));
+    }
+
     // Clear error for this field when user types
     if (errors[id]) {
       setErrors(prev => ({
@@ -83,25 +96,68 @@ export function ExpandedProfileForm() {
 
   // Save form data as draft
   const saveDraft = () => {
-    // Save to localStorage for persistence
-    localStorage.setItem('profileFormDraft', JSON.stringify(formData));
-    alert('Draft saved successfully!');
+    try {
+      // Use our utility function to save the draft
+      saveFormDraft(formData);
+
+      // Show confirmation message
+      setShowSaveConfirmation(true);
+
+      // Hide confirmation message after 3 seconds
+      setTimeout(() => {
+        setShowSaveConfirmation(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      alert('There was an error saving your draft. Please try again.');
+    }
   };
 
-  // Validate form before submission
+  // Custom validation function that extends our utility validation
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Required fields validation
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = 'Email format is invalid';
+    // Required fields validation with improved checks
+    if (!formData.firstName?.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (formData.firstName.length > 50) {
+      newErrors.firstName = 'First name must be under 50 characters';
+    }
+
+    if (!formData.lastName?.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (formData.lastName.length > 50) {
+      newErrors.lastName = 'Last name must be under 50 characters';
+    }
+
+    if (!formData.jobTitle?.trim()) {
+      newErrors.jobTitle = 'Job title is required';
+    } else if (formData.jobTitle.length > 100) {
+      newErrors.jobTitle = 'Job title must be under 100 characters';
+    }
+
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email format is invalid';
+    }
 
     // At least one value proposition is required
-    if (!formData.mainValue.trim())
+    if (!formData.mainValue?.trim()) {
       newErrors.mainValue = 'Please share what people can reach out to you for';
+    } else if (formData.mainValue.length > 200) {
+      newErrors.mainValue = 'Please keep your main value under 200 characters';
+    }
+
+    // If industry is provided, validate length
+    if (formData.industry?.trim() && formData.industry.length > 100) {
+      newErrors.industry = 'Industry description must be under 100 characters';
+    }
+
+    // If fun fact is provided, validate length
+    if (formData.funFact?.trim() && formData.funFact.length > 200) {
+      newErrors.funFact = 'Fun fact must be under 200 characters';
+    }
 
     // Set the errors
     setErrors(newErrors);
@@ -112,15 +168,19 @@ export function ExpandedProfileForm() {
 
   // Handle form submission to next step
   const handleNextStep = () => {
+    setIsSubmitting(true);
+    
     if (validateForm()) {
-      // Save current form data to localStorage
-      localStorage.setItem('profileFormData', JSON.stringify(formData));
-
-      // Save to session storage too for sharing between pages
-      sessionStorage.setItem('profileFormData', JSON.stringify(formData));
-
-      // Navigate to next step
-      router.push('/create-profile/interests');
+      try {
+        // Use our utility function to save form data
+        saveFormData(formData);
+        
+        // Navigate to next step
+        router.push('/create-profile/interests');
+      } catch (error) {
+        console.error('Error saving form data:', error);
+        setIsSubmitting(false);
+      }
     } else {
       // Scroll to first error
       const firstErrorField = Object.keys(errors)[0];
@@ -128,22 +188,9 @@ export function ExpandedProfileForm() {
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      setIsSubmitting(false);
     }
   };
-
-  // Load saved draft or persisted data on component mount
-  React.useEffect(() => {
-    // Try to load from sessionStorage first (for navigation between steps)
-    const sessionData = sessionStorage.getItem('profileFormData');
-    // Then try localStorage (for saved drafts)
-    const savedDraft = localStorage.getItem('profileFormDraft');
-
-    if (sessionData) {
-      setFormData(JSON.parse(sessionData));
-    } else if (savedDraft) {
-      setFormData(JSON.parse(savedDraft));
-    }
-  }, []);
 
   return (
     <div className="space-y-8">
@@ -300,6 +347,7 @@ export function ExpandedProfileForm() {
             onChange={handleInputChange}
             placeholder='Example: "I once sold everything I owned and moved to Bali." 🌴'
           />
+          {errors.funFact && <p className="text-red-500 text-xs">{errors.funFact}</p>}
         </div>
 
         <div className="space-y-2">
@@ -314,6 +362,7 @@ export function ExpandedProfileForm() {
             Be specific! Instead of &quot;Fitness,&quot; say &quot;Strength training for busy
             professionals.&quot;
           </p>
+          {errors.industry && <p className="text-red-500 text-xs">{errors.industry}</p>}
         </div>
       </div>
 
@@ -430,6 +479,16 @@ export function ExpandedProfileForm() {
       </div>
 
       <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 border-t pt-6">
+        <div className="flex-1 flex items-center">
+          {showSaveConfirmation && (
+            <div className="inline-flex items-center px-2 py-1 rounded-md bg-green-50 text-green-700 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>
+              Draft saved successfully!
+            </div>
+          )}
+        </div>
         <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={saveDraft}>
           Save Draft
         </Button>

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ProfileFormData } from "@/types/profile";
-import Link from "next/link";
+import { loadFormData, saveFormData, mergeFormData } from "@/lib/form-utils";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -12,6 +12,7 @@ export default function InterestsPage() {
   const [formData, setFormData] = useState<ProfileFormData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Available interests to choose from
   const availableInterests = [
@@ -26,14 +27,26 @@ export default function InterestsPage() {
   // Load previous form data
   useEffect(() => {
     const loadProfileData = () => {
-      const savedData = sessionStorage.getItem('profileFormData');
-      if (savedData) {
-        setFormData(JSON.parse(savedData));
-      } else {
-        // If no data, go back to first step
+      try {
+        const storedData = loadFormData();
+
+        if (storedData) {
+          setFormData(storedData);
+
+          // If the form already has interests, load them
+          if (storedData.interests && Array.isArray(storedData.interests)) {
+            setSelectedInterests(storedData.interests);
+          }
+        } else {
+          // If no data, go back to first step
+          router.push('/create-profile');
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
         router.push('/create-profile');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     const timer = setTimeout(loadProfileData, 300);
@@ -52,34 +65,43 @@ export default function InterestsPage() {
 
   const handleNextStep = () => {
     if (!formData) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Combine previous form data with interests
+      const updatedFormData = mergeFormData(formData, {
+        interests: selectedInterests
+      });
 
-    // Combine previous form data with interests
-    const updatedFormData: ProfileFormData = {
-      ...formData,
-      interests: selectedInterests
-    };
+      // Save to storage
+      saveFormData(updatedFormData);
 
-    // Save to session storage
-    sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
-
-    // Navigate to next step
-    router.push('/create-profile/script');
+      // Navigate to next step
+      router.push('/create-profile/script');
+    } catch (error) {
+      console.error('Error saving interests:', error);
+      setIsSubmitting(false);
+    }
   };
 
   const handleBackStep = () => {
     if (!formData) return;
-    
-    // Save selected interests before going back
-    const updatedFormData: ProfileFormData = {
-      ...formData,
-      interests: selectedInterests
-    };
 
-    // Update session storage
-    sessionStorage.setItem('profileFormData', JSON.stringify(updatedFormData));
+    try {
+      // Save selected interests before going back
+      const updatedFormData = mergeFormData(formData, {
+        interests: selectedInterests
+      });
 
-    // Go back to previous step
-    router.push('/create-profile');
+      // Update storage
+      saveFormData(updatedFormData);
+
+      // Go back to previous step
+      router.push('/create-profile');
+    } catch (error) {
+      console.error('Error saving interests before navigation:', error);
+    }
   };
 
   if (isLoading) {
@@ -149,9 +171,9 @@ export default function InterestsPage() {
                 type="button"
                 className="w-full sm:w-auto"
                 onClick={handleNextStep}
-                disabled={selectedInterests.length < 3}
+                disabled={selectedInterests.length < 3 || isSubmitting}
               >
-                Next: Generate Script
+                {isSubmitting ? 'Saving...' : 'Next: Generate Script'}
               </Button>
             </div>
           </div>
