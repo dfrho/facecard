@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ProfileFormData, ScriptVersion } from "@/types/profile";
 import { loadFormData, saveFormData, mergeFormData, saveCurrentStep } from "@/lib/form-utils";
-import { generateScript, saveScriptVersion, getScriptVersions } from "@/lib/openai-service";
+import { generateScript, saveScriptVersion, getScriptVersions } from "@/lib/openai-enhanced";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";

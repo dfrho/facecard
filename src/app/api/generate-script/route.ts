@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 // API constants
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_MODEL = "gpt-4"; // or "gpt-3.5-turbo" for a more affordable option
+const OPENAI_MODEL = "gpt-4-turbo"; // Using the latest model for better results
 
 /**
  * API route handler for generating scripts
@@ -98,6 +98,20 @@ async function generateScriptWithOpenAI(
  */
 function createOpenAIPrompt(data: ProfileFormData): string {
   const tone = getToneDescription(data.toneValue);
+  const style = getIndustryStyle(data.industry || '', tone);
+  
+  // Extract personality hints from the data
+  const personalityHints = [];
+  if (data.funFact) personalityHints.push(`Has an interesting background: ${data.funFact}`);
+  if (data.superpower === 'connect') personalityHints.push('Is a natural connector and networker');
+  if (data.superpower === 'ideas') personalityHints.push('Is an innovative thinker and idea generator');
+  if (data.superpower === 'creative') personalityHints.push('Has a creative and artistic mindset');
+  if (data.superpower === 'problems') personalityHints.push('Is an analytical problem-solver');
+  if (data.superpower === 'inspire') personalityHints.push('Is motivational and inspiring');
+  if (data.superpower === 'vibes') personalityHints.push('Is upbeat and brings positive energy');
+  if (data.superpower === 'other' && data.otherSuperpower) {
+    personalityHints.push(`Describes their superpower as: ${data.otherSuperpower}`);
+  }
 
   return `
 You are a professional copywriter creating a 15-30 second video script for a business professional.
@@ -105,29 +119,24 @@ The script should showcase their skills, what they can offer, and what they need
 It should sound natural and authentic, like the person is speaking directly to the viewer.
 
 TONE: ${tone}
+WRITING STYLE: ${style}
+
+PERSONALITY: ${personalityHints.length > 0 ? personalityHints.join('. ') : 'Professional and authentic'}
 
 PROFILE INFORMATION:
 - Name: ${data.firstName} ${data.lastName}
 - Job Title: ${data.jobTitle}
 - Company: ${data.company || "Not specified"}
 - Industry: ${data.industry || "Not specified"}
-- Professional Superpower: ${
-    data.superpower === "other" ? data.otherSuperpower : data.superpower
-  }
+- Professional Superpower: ${data.superpower === "other" ? data.otherSuperpower : data.superpower}
 - Main Value Proposition: ${data.mainValue}
 - Secondary Value: ${data.secondaryValue || "Not specified"}
-- Who They Help: ${
-    data.audience === "other" ? data.otherAudience : data.audience
-  }
+- Who They Help: ${data.audience === "other" ? data.otherAudience : data.audience}
 - Fun Fact: ${data.funFact || "Not specified"}
 - Primary Ask (What they need): ${data.primaryAsk || "Not specified"}
 - Secondary Ask: ${data.secondaryAsk || "Not specified"}
 - Contact Method: ${data.contactMethod || "Not specified"}
-- Interests/Skills: ${
-    data.interests && data.interests.length > 0
-      ? data.interests.join(", ")
-      : "Not specified"
-  }
+- Interests/Skills: ${data.interests && data.interests.length > 0 ? data.interests.join(", ") : "Not specified"}
 
 REQUIREMENTS:
 1. The script should be concise and under 200 words
@@ -137,7 +146,9 @@ REQUIREMENTS:
 5. Maintain their authentic voice
 6. Absolutely NO formal marketing language or buzzwords
 7. Make it sound like a real person speaking naturally
-8. Include ONLY the script text, no other instructions or explanations
+8. Structure the script with natural paragraph breaks for easier performance
+9. Adapt your language style to match their industry and personality
+10. Include ONLY the script text, no other instructions or explanations
 
 SCRIPT:
 `;
@@ -154,6 +165,44 @@ function getToneDescription(toneValue: number): string {
   } else {
     return "formal and business-focused";
   }
+}
+
+/**
+ * Get writing style based on industry and tone
+ */
+function getIndustryStyle(industry: string, tone: string): string {
+  // Normalize the industry name
+  const normalizedIndustry = industry.toLowerCase();
+  
+  // Map industries to specific writing styles
+  if (normalizedIndustry.includes('tech') || normalizedIndustry.includes('software') || normalizedIndustry.includes('ai')) {
+    return tone === 'friendly and casual' 
+      ? 'innovative and forward-thinking with a touch of technical expertise'
+      : 'technical yet accessible, focusing on innovation and solutions';
+  }
+  
+  if (normalizedIndustry.includes('finance') || normalizedIndustry.includes('banking') || normalizedIndustry.includes('investment')) {
+    return tone === 'friendly and casual'
+      ? 'trustworthy and knowledgeable about financial matters, with an approachable style'
+      : 'authoritative and precise, emphasizing expertise and reliability';
+  }
+  
+  if (normalizedIndustry.includes('health') || normalizedIndustry.includes('medical') || normalizedIndustry.includes('care')) {
+    return tone === 'friendly and casual'
+      ? 'empathetic and reassuring, with a personal touch'
+      : 'professional and credible, with a caring undertone';
+  }
+  
+  if (normalizedIndustry.includes('creative') || normalizedIndustry.includes('design') || normalizedIndustry.includes('art')) {
+    return tone === 'friendly and casual'
+      ? 'expressive and imaginative, showcasing creative flair'
+      : 'polished and inspiring, highlighting creative expertise';
+  }
+  
+  // Default style based on tone
+  return tone === 'friendly and casual'
+    ? 'authentic and conversational, highlighting personal strengths'
+    : 'professional and articulate, emphasizing expertise';
 }
 
 /**
