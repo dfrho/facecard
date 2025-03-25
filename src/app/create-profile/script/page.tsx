@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ProfileFormData } from "@/types/profile";
-import { loadFormData, saveFormData, mergeFormData } from "@/lib/form-utils";
-import { generateScript } from "@/lib/openai-service";
+import { ProfileFormData, ScriptVersion } from "@/types/profile";
+import { loadFormData, saveFormData, mergeFormData, saveCurrentStep } from "@/lib/form-utils";
+import { generateScript, saveScriptVersion, getScriptVersions } from "@/lib/openai-service";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -15,8 +15,10 @@ export default function ScriptPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedScript, setGeneratedScript] = useState("");
   const [editedScript, setEditedScript] = useState("");
+  const [scriptVersions, setScriptVersions] = useState<ScriptVersion[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showScriptHistory, setShowScriptHistory] = useState(false);
 
   // Load profile data from previous steps
   useEffect(() => {
@@ -24,14 +26,22 @@ export default function ScriptPage() {
       try {
         // Use the form utility to load data
         const storedData = loadFormData();
-        
+
         if (storedData) {
           setFormData(storedData);
-          
+
+          // Set current step
+          saveCurrentStep('script');
+
           // If there's already a generated script, use it
           if (storedData.generatedScript) {
             setGeneratedScript(storedData.generatedScript);
             setEditedScript(storedData.generatedScript);
+            
+            // Load script versions
+            const versions = getScriptVersions(getProfileId(storedData));
+            setScriptVersions(versions);
+            
             setIsLoading(false);
           } else {
             // Otherwise generate a new script
@@ -51,16 +61,50 @@ export default function ScriptPage() {
     loadProfileData();
   }, [router]);
 
+  // Generate a profile ID based on name and email
+  const getProfileId = (data: ProfileFormData): string => {
+    return `${data.firstName}-${data.lastName}-${data.email}`.toLowerCase().replace(/\s+/g, '-');
+  };
+
   // Function to generate a script based on form data
   const generateScriptFromProfile = async (data: ProfileFormData) => {
     setIsGenerating(true);
     setError(null);
-    
+
     try {
-      // Call our script generation service
-      const script = await generateScript(data);
+      // First try to call the API endpoint
+      let script = '';
+      
+      try {
+        const response = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          script = result.script;
+        } else {
+          // If API fails, use the client-side fallback
+          script = await generateScript(data);
+        }
+      } catch (apiError) {
+        console.error('API error, using fallback:', apiError);
+        // Use client-side fallback if API call fails
+        script = await generateScript(data);
+      }
+      
       setGeneratedScript(script);
       setEditedScript(script);
+      
+      // Save this version to history
+      const profileId = getProfileId(data);
+      const version = await saveScriptVersion(script, profileId, 'ai');
+      setScriptVersions(prev => [version, ...prev]);
+      
     } catch (error) {
       console.error('Error generating script:', error);
       setError('Failed to generate script. Please try again.');
@@ -80,23 +124,42 @@ export default function ScriptPage() {
   // Handle script editing
   const handleScriptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditedScript(e.target.value);
+    
+    // Save user edits as a new version after a delay
+    const saveEdits = async () => {
+      if (formData) {
+        const profileId = getProfileId(formData);
+        const version = await saveScriptVersion(e.target.value, profileId, 'user');
+        setScriptVersions(prev => [version, ...prev]);
+      }
+    };
+    
+    // Debounce save to avoid too many saves while typing
+    const timeoutId = setTimeout(saveEdits, 2000);
+    return () => clearTimeout(timeoutId);
+  };
+  
+  // Load a script version
+  const loadScriptVersion = (version: ScriptVersion) => {
+    setEditedScript(version.content);
+    setShowScriptHistory(false);
   };
 
   // Continue to next step
   const handleNextStep = () => {
     if (!formData) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Add the edited script to the form data
       const updatedFormData = mergeFormData(formData, {
         generatedScript: editedScript
       });
-      
+
       // Save to storage
-      saveFormData(updatedFormData);
-      
+      saveFormData(updatedFormData, 'script');
+
       // Navigate to next step
       router.push('/create-profile/video');
     } catch (error) {
@@ -129,18 +192,54 @@ export default function ScriptPage() {
         <div className="rounded-xl border bg-card p-4 sm:p-6 shadow-sm">
           <div className="space-y-6">
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Script Preview</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Script Preview</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowScriptHistory(!showScriptHistory)}
+                >
+                  {showScriptHistory ? "Hide History" : "Show History"}
+                </Button>
+              </div>
               <p className="text-sm text-muted-foreground">
                 This script has been generated based on your profile information.
               </p>
             </div>
-            
+
             {error && (
               <div className="rounded-md bg-red-50 p-4 mb-6">
                 <div className="flex">
                   <div className="text-sm text-red-700">
                     <p>{error}</p>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {showScriptHistory && scriptVersions.length > 0 && (
+              <div className="space-y-3 mb-4">
+                <h3 className="font-medium">Script History</h3>
+                <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-3">
+                  {scriptVersions.map((version) => (
+                    <div 
+                      key={version.id}
+                      className="flex justify-between items-center text-sm p-2 rounded hover:bg-muted cursor-pointer"
+                      onClick={() => loadScriptVersion(version)}
+                    >
+                      <div className="flex items-center">
+                        <span className={`mr-2 px-2 py-0.5 rounded-full text-xs ${
+                          version.source === 'ai' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {version.source === 'ai' ? 'AI' : 'You'}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {new Date(version.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                      <Button size="sm" variant="ghost">Load</Button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -198,6 +297,9 @@ export default function ScriptPage() {
                       value={editedScript}
                       onChange={handleScriptChange}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Your edits are automatically saved as you type.
+                    </p>
                   </div>
                 </div>
               </>
