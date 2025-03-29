@@ -11,7 +11,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 export async function generateScript(profileData: ProfileFormData): Promise<string> {
   try {
     // Check if we should use the API or fallback
-    if (OPENAI_API_KEY && process.env.NODE_ENV === 'production') {
+    if (OPENAI_API_KEY && process.env.VERCEL_ENV === 'production') {
       try {
         // First try the API route
         return await callAPIRoute(profileData);
