@@ -1,3 +1,5 @@
+'use client';
+
 import { ExpandedProfileForm } from "@/components/expanded-profile-form";
 
 export default function CreateProfilePage() {
