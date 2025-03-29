@@ -3,7 +3,7 @@ import { generateUniqueId } from './script-utils';
 import { generateEnhancedScript } from './script-generator';
 
 // API key from environment variables
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
 /**
  * Generate a script using OpenAI based on profile data
@@ -11,8 +11,11 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 export async function generateScript(profileData: ProfileFormData): Promise<string> {
   try {
     // Check if we should use the API or fallback
-    if (OPENAI_API_KEY && process.env.VERCEL_ENV === 'production') {
+    if (OPENAI_API_KEY) {
       try {
+        // Log attempt to use API
+        console.log('Attempting to use OpenAI API with key available:', !!OPENAI_API_KEY);
+        
         // First try the API route
         return await callAPIRoute(profileData);
       } catch (apiError) {
@@ -22,8 +25,8 @@ export async function generateScript(profileData: ProfileFormData): Promise<stri
         return generateEnhancedScript(profileData);
       }
     } else {
-      // For development or when no API key is available, use the enhanced template
-      // Simulate network delay for a more realistic experience
+      // No API key available, use the enhanced template
+      console.log('No OpenAI API key available, using enhanced template');
       await new Promise(resolve => setTimeout(resolve, 1500));
       return generateEnhancedScript(profileData);
     }

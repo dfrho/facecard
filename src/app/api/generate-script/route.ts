@@ -2,11 +2,12 @@ import { ProfileFormData } from "@/types/profile";
 import { NextRequest, NextResponse } from "next/server";
 import { getToneDescription, getIndustryStyle } from "@/lib/script-utils";
 import { generateEnhancedScript } from "@/lib/script-generator";
+import OpenAI from "openai";
 
 // API constants
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-const OPENAI_MODEL = "gpt-4-turbo"; // Using the latest model
+// Using gpt-4o model
+const OPENAI_MODEL = "gpt-4o";
 
 /**
  * API route handler for generating scripts
@@ -46,43 +47,39 @@ async function generateScriptWithOpenAI(
 ): Promise<string> {
   // If no API key, use the fallback method
   if (!OPENAI_API_KEY) {
+    console.log("No OpenAI API key found, using fallback method");
     return generateEnhancedScript(profileData);
   }
 
   try {
     // Create prompt for OpenAI
     const prompt = createPrompt(profileData);
-
-    // Call OpenAI API
-    const response = await fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: "You are a professional copywriter creating video scripts."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      }),
+    
+    // Initialize OpenAI client
+    const client = new OpenAI({
+      apiKey: OPENAI_API_KEY
     });
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
-    }
+    console.log("Using OpenAI API with model:", OPENAI_MODEL);
+    
+    // Call OpenAI API with documented syntax
+    const response = await client.chat.completions.create({
+      model: OPENAI_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional copywriter creating video scripts."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    });
 
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
+    return response.choices[0].message.content?.trim() || "";
   } catch (error) {
     console.error("Error calling OpenAI API:", error);
     // Fall back to local generation if API fails
