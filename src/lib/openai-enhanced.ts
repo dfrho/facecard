@@ -3,7 +3,7 @@ import { generateUniqueId } from './script-utils';
 import { generateEnhancedScript } from './script-generator';
 
 // API key from environment variables
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 /**
  * Generate a script using OpenAI based on profile data
