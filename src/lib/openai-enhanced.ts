@@ -3,7 +3,7 @@ import { generateUniqueId } from './script-utils';
 import { generateEnhancedScript } from './script-generator';
 
 // API key from environment variables
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 /**
  * Generate a script using OpenAI based on profile data
@@ -40,20 +40,32 @@ export async function generateScript(profileData: ProfileFormData): Promise<stri
  * Call the API route for script generation
  */
 async function callAPIRoute(profileData: ProfileFormData): Promise<string> {
-  const response = await fetch('/api/generate-script', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(profileData),
-  });
+  console.log('Calling API route with profile data');
   
-  if (!response.ok) {
-    throw new Error(`API route failed: ${response.status}`);
+  try {
+    const response = await fetch('/api/generate-script', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+    
+    console.log('API route response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API route failed: ${response.status}`, errorText);
+      throw new Error(`API route failed: ${response.status} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API route returned script with length:', result.script ? result.script.length : 0);
+    return result.script;
+  } catch (error) {
+    console.error('Error calling API route:', error);
+    throw error;
   }
-  
-  const result = await response.json();
-  return result.script;
 }
 
 /**
