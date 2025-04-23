@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,6 +13,14 @@ export function Header() {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+  
+  const handleLogin = useCallback(() => {
+    signIn('google', { callbackUrl: '/create-profile' });
+  }, []);
+  
+  const handleLogout = useCallback(() => {
+    signOut();
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -31,11 +40,24 @@ export function Header() {
             <Button variant="ghost">Pricing</Button>
           </Link>
           {session ? (
-            <Button variant="outline" onClick={() => signOut()}>
-              Logout
-            </Button>
+            <div className="flex items-center space-x-2">
+              {session.user?.image && (
+                <Link href="/create-profile/profile">
+                  <Image
+                    src={session.user.image}
+                    alt="User Avatar"
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                </Link>
+              )}
+              <Button variant="outline" onClick={handleLogout}>
+                Logout
+              </Button>
+            </div>
           ) : (
-            <Button variant="outline" onClick={() => signIn('google')}>
+            <Button variant="outline" onClick={handleLogin}>
               Login
             </Button>
           )}
@@ -102,14 +124,31 @@ export function Header() {
               </Button>
             </Link>
             {session ? (
-              <Button variant="outline" className="w-full justify-start" onClick={() => signOut()}>
-                Logout
-              </Button>
+              <div className="flex items-center space-x-2">
+                {session.user?.image && (
+                  <Link href="/create-profile/profile">
+                    <Image
+                      src={session.user.image}
+                      alt="User Avatar"
+                      width={32}
+                      height={32}
+                      className="rounded-full"
+                    />
+                  </Link>
+                )}
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
             ) : (
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => signIn('google')}
+                onClick={handleLogin}
               >
                 Login
               </Button>
