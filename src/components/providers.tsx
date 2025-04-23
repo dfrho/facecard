@@ -8,5 +8,10 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
-  return <SessionProvider>{children}</SessionProvider>;
+  // Add refetchInterval to periodically check for session status
+  return (
+    <SessionProvider refetchInterval={0} refetchOnWindowFocus={true}>
+      {children}
+    </SessionProvider>
+  );
 }
