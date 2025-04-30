@@ -1,11 +1,32 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import LinkedInProvider from "next-auth/providers/linkedin";
 
 export const authOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_CLIENT_ID as string,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET as string,
+      issuer: 'https://www.linkedin.com/oauth',
+      authorization: {
+        url: 'https://www.linkedin.com/oauth/v2/authorization',
+        params: { scope: 'openid profile email' },
+      },
+      token: 'https://www.linkedin.com/oauth/v2/accessToken',
+      userinfo: 'https://api.linkedin.com/v2/userinfo',
+      jwks_endpoint: 'https://www.linkedin.com/oauth/openid/jwks',
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
     }),
   ],
   callbacks: {
@@ -53,6 +74,6 @@ export const authOptions = {
   },
 };
 
-const handler = NextAuth(authOptions); // Add authOptions here
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

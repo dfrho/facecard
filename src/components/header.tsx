@@ -5,6 +5,12 @@ import { Button } from './ui/button';
 import { useState, useCallback } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,12 +20,16 @@ export function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
   
-  const handleLogin = useCallback(() => {
+  const handleGoogleLogin = useCallback(() => {
     signIn('google', { callbackUrl: '/create-profile' });
   }, []);
   
+  const handleLinkedInLogin = useCallback(() => {
+    signIn('linkedin', { callbackUrl: '/create-profile' });
+  }, []);
+  
   const handleLogout = useCallback(() => {
-    signOut();
+    signOut({ callbackUrl: '/' });
   }, []);
 
   return (
@@ -57,9 +67,15 @@ export function Header() {
               </Button>
             </div>
           ) : (
-            <Button variant="outline" onClick={handleLogin}>
-              Login
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Login</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end"> 
+                <DropdownMenuItem onClick={handleGoogleLogin}>Sign in with Google</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLinkedInLogin}>Sign in with LinkedIn</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           <Link href="/create-profile">
             <Button>Get Started</Button>
@@ -145,13 +161,15 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={handleLogin}
-              >
-                Login
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">Login</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start"> 
+                  <DropdownMenuItem onClick={handleGoogleLogin}>Sign in with Google</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLinkedInLogin}>Sign in with LinkedIn</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <Link href="/create-profile" className="block">
               <Button className="w-full">Get Started</Button>

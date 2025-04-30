@@ -1,10 +1,10 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { ProfileFormData } from "@/types/profile";
 import { loadFormData, saveFormData, saveCurrentStep } from "@/lib/form-utils";
 import { useSession } from 'next-auth/react';
@@ -40,6 +40,7 @@ export function ExpandedProfileForm() {
   // Load existing form data when the component mounts
   useEffect(() => {
     const storedData = loadFormData();
+    console.log('Loaded from storage:', storedData);
     if (storedData) {
       setFormData(storedData);
       
@@ -62,13 +63,17 @@ export function ExpandedProfileForm() {
       if (storedData.primaryAsk) setPrimaryAsk(storedData.primaryAsk);
       if (storedData.secondaryAsk) setSecondaryAsk(storedData.secondaryAsk);
       if (storedData.contactMethod) setContactMethod(storedData.contactMethod);
-      if (storedData.photoUrl) setAvatarUrl(storedData.photoUrl);
+      if (storedData.photoUrl) {
+        console.log('Setting avatarUrl from storage:', storedData.photoUrl);
+        setAvatarUrl(storedData.photoUrl);
+      }
     }
   }, []);
   
   // Initialize avatar from session user image when the component mounts
   useEffect(() => {
     if (session?.user?.image) {
+      console.log('Setting avatarUrl from session:', session.user.image);
       setAvatarUrl(session.user.image);
     }
   }, [session?.user?.image]);
