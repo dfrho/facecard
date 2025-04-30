@@ -40,7 +40,6 @@ export function ExpandedProfileForm() {
   // Load existing form data when the component mounts
   useEffect(() => {
     const storedData = loadFormData();
-    console.log('Loaded from storage:', storedData);
     if (storedData) {
       setFormData(storedData);
       
@@ -64,7 +63,6 @@ export function ExpandedProfileForm() {
       if (storedData.secondaryAsk) setSecondaryAsk(storedData.secondaryAsk);
       if (storedData.contactMethod) setContactMethod(storedData.contactMethod);
       if (storedData.photoUrl) {
-        console.log('Setting avatarUrl from storage:', storedData.photoUrl);
         setAvatarUrl(storedData.photoUrl);
       }
     }
@@ -73,10 +71,13 @@ export function ExpandedProfileForm() {
   // Initialize avatar from session user image when the component mounts
   useEffect(() => {
     if (session?.user?.image) {
-      console.log('Setting avatarUrl from session:', session.user.image);
-      setAvatarUrl(session.user.image);
+      // Check if avatarUrl is already set (e.g., from stored data or upload)
+      // Only set from session if avatarUrl is currently the default or empty
+      if (!avatarUrl || avatarUrl.startsWith('https://via.placeholder.com')) {
+        setAvatarUrl(session.user.image);
+      }
     }
-  }, [session?.user?.image]);
+  }, [session?.user?.image, avatarUrl]);
 
   // Handle image selection from file input
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,9 +105,6 @@ export function ExpandedProfileForm() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Upload successful:", data);
-        
-        // Use the full URL from the backend
         const fullAvatarUrl = data.avatarUrl;
         setAvatarUrl(fullAvatarUrl);
         
@@ -137,12 +135,10 @@ export function ExpandedProfileForm() {
           setError(null);
         }, 3000);
       } else {
-        console.error('Error uploading avatar', await response.text());
-        setError("Failed to upload avatar. Please try again.");
+        alert(`Upload failed: ${await response.text()}`);
       }
     } catch (error) {
-      console.error('Error uploading avatar', error);
-      setError("Failed to upload avatar. Please try again.");
+      alert('An error occurred during upload.');
     }
   };
 
