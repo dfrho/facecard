@@ -1,15 +1,18 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { ProfileFormData } from "@/types/profile";
 import { loadFormData, saveFormData, saveCurrentStep } from "@/lib/form-utils";
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 
 export function ExpandedProfileForm() {
   const router = useRouter();
+  const { data: session, update } = useSession();
   const [formData, setFormData] = useState<ProfileFormData | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -31,6 +34,8 @@ export function ExpandedProfileForm() {
   const [contactMethod, setContactMethod] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Load existing form data when the component mounts
   useEffect(() => {
@@ -57,8 +62,85 @@ export function ExpandedProfileForm() {
       if (storedData.primaryAsk) setPrimaryAsk(storedData.primaryAsk);
       if (storedData.secondaryAsk) setSecondaryAsk(storedData.secondaryAsk);
       if (storedData.contactMethod) setContactMethod(storedData.contactMethod);
+      if (storedData.photoUrl) {
+        setAvatarUrl(storedData.photoUrl);
+      }
     }
   }, []);
+  
+  // Initialize avatar from session user image when the component mounts
+  useEffect(() => {
+    if (session?.user?.image) {
+      // Check if avatarUrl is already set (e.g., from stored data or upload)
+      // Only set from session if avatarUrl is currently the default or empty
+      if (!avatarUrl || avatarUrl.startsWith('https://via.placeholder.com')) {
+        setAvatarUrl(session.user.image);
+      }
+    }
+  }, [session?.user?.image, avatarUrl]);
+
+  // Handle image selection from file input
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setSelectedImage(event.target.files[0]);
+    }
+  };
+
+  // Handle avatar upload
+  const handleAvatarUpload = async () => {
+    if (!selectedImage) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedImage);
+
+    try {
+      setError("Uploading photo...");
+      
+      const response = await fetch('/api/upload-avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const fullAvatarUrl = data.avatarUrl;
+        setAvatarUrl(fullAvatarUrl);
+        
+        // Update session if available
+        if (session) {
+          await update({
+            ...session,
+            user: {
+              ...session.user,
+              image: fullAvatarUrl,
+            },
+          });
+        }
+        
+        // Get current form data and update with new avatar URL
+        const currentData = loadFormData() || {} as ProfileFormData;
+        const updatedFormData: ProfileFormData = {
+          ...currentData,
+          photoUrl: fullAvatarUrl,
+        };
+        saveFormData(updatedFormData);
+        
+        setSelectedImage(null);
+        setError("Avatar uploaded successfully!");
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setError(null);
+        }, 3000);
+      } else {
+        alert(`Upload failed: ${await response.text()}`);
+      }
+    } catch (error) {
+      alert('An error occurred during upload.');
+    }
+  };
 
   const handleSaveDraft = () => {
     try {
@@ -82,6 +164,7 @@ export function ExpandedProfileForm() {
         primaryAsk,
         secondaryAsk,
         contactMethod,
+        photoUrl: avatarUrl || undefined,
         // Maintain any existing fields that aren't being updated
         ...(formData || {})
       };
@@ -134,6 +217,7 @@ export function ExpandedProfileForm() {
         primaryAsk,
         secondaryAsk,
         contactMethod,
+        photoUrl: avatarUrl || undefined,
         // Maintain any existing fields that aren't being updated
         ...(formData || {})
       };
@@ -159,6 +243,76 @@ export function ExpandedProfileForm() {
         </div>
       )}
       
+      {/* Profile Photo */}
+      <div className="space-y-5 mb-8">
+        <h3 className="text-base font-medium sm:text-lg">Profile Photo</h3>
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="relative">
+            {avatarUrl ? (
+              <div className="w-24 h-24 relative">
+                <Image
+                  src={avatarUrl}
+                  alt="User Avatar"
+                  fill
+                  className="rounded-full object-cover"
+                  style={{ objectFit: 'cover' }}
+                  priority
+                />
+              </div>
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-10 w-10 text-gray-400"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+            )}
+          </div>
+          <div className="space-y-3 flex-1">
+            <Label htmlFor="profilePhoto">Upload Profile Photo</Label>
+            <div className="flex flex-col sm:flex-row items-start gap-3 w-full">
+              <div className="flex-grow">
+                <Input
+                  id="profilePhoto"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full"
+                />
+              </div>
+              <Button
+                type="button"
+                onClick={handleAvatarUpload}
+                size="sm"
+                disabled={!selectedImage}
+                className="whitespace-nowrap"
+              >
+                Upload Photo
+              </Button>
+            </div>
+            {selectedImage && (
+              <div className="mt-2 text-sm text-gray-600">
+                Selected: {selectedImage.name}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Add a professional photo for your video business card. Square images work best.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Basic Information */}
       <div className="space-y-5">
         <h3 className="text-base font-medium sm:text-lg">Basic Information</h3>
