@@ -14,24 +14,24 @@ export async function generateScript(profileData: ProfileFormData): Promise<stri
     if (OPENAI_API_KEY) {
       try {
         // Log attempt to use API
-        console.log('Attempting to use OpenAI API with key available:', !!OPENAI_API_KEY);
+        // console.log('Attempting to use OpenAI API with key available:', !!OPENAI_API_KEY);
         
         // First try the API route
         return await callAPIRoute(profileData);
       } catch (apiError) {
-        console.warn('API route failed:', apiError);
+        // console.warn('API route failed:', apiError);
         // Fall back to local generation
         await new Promise(resolve => setTimeout(resolve, 1000));
         return generateEnhancedScript(profileData);
       }
     } else {
       // No API key available, use the enhanced template
-      console.log('No OpenAI API key available, using enhanced template');
+      // console.log('No OpenAI API key available, using enhanced template');
       await new Promise(resolve => setTimeout(resolve, 1500));
       return generateEnhancedScript(profileData);
     }
   } catch (error) {
-    console.error('Error generating script:', error);
+    // console.error('Error generating script:', error);
     throw new Error('Failed to generate script. Please try again.');
   }
 }
@@ -40,32 +40,27 @@ export async function generateScript(profileData: ProfileFormData): Promise<stri
  * Call the API route for script generation
  */
 async function callAPIRoute(profileData: ProfileFormData): Promise<string> {
-  console.log('Calling API route with profile data');
+  // console.log('Calling API route with profile data');
   
-  try {
-    const response = await fetch('/api/generate-script', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(profileData),
-    });
+  const response = await fetch('/api/generate-script', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(profileData),
+  });
     
-    console.log('API route response status:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API route failed: ${response.status}`, errorText);
-      throw new Error(`API route failed: ${response.status} - ${errorText}`);
-    }
-    
-    const result = await response.json();
-    console.log('API route returned script with length:', result.script ? result.script.length : 0);
-    return result.script;
-  } catch (error) {
-    console.error('Error calling API route:', error);
-    throw error;
+  // console.log('API route response status:', response.status);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    // console.error(`API route failed: ${response.status}`, errorText);
+    throw new Error(`API route failed: ${response.status} - ${errorText}`);
   }
+  
+  const result = await response.json();
+  // console.log('API route returned script with length:', result.script ? result.script.length : 0);
+  return result.script;
 }
 
 /**
@@ -90,7 +85,7 @@ export async function saveScriptVersion(
     localStorage.setItem(`script_versions_${profileId}`, JSON.stringify(versions));
     return version;
   } catch (error) {
-    console.error('Error saving script version:', error);
+    // console.error('Error saving script version:', error);
     return version; // Still return the version even if saving fails
   }
 }
@@ -103,7 +98,7 @@ export function getScriptVersions(profileId: string): ScriptVersion[] {
     const versionsJson = localStorage.getItem(`script_versions_${profileId}`);
     return versionsJson ? JSON.parse(versionsJson) : [];
   } catch (error) {
-    console.error('Error getting script versions:', error);
+    // console.error('Error getting script versions:', error);
     return [];
   }
 }
