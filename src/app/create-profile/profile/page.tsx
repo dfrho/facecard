@@ -62,14 +62,22 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold mb-4">Profile</h1>
       {session && session.user && (
         <div className="flex items-center space-x-4">
-          {(avatarUrl || session.user.image) && (
-            <Image
-              src={avatarUrl || session.user.image}
-              alt="User Avatar"
-              width={100}
-              height={100}
-              className="rounded-full"
-            />
+          {(avatarUrl || session.user?.image) && (() => {
+            const imageSrc = avatarUrl || session.user!.image!;
+            return (
+              <Image
+                src={imageSrc}
+                alt="User Avatar"
+                width={100}
+                height={100}
+                className="rounded-full"
+              />
+            );
+          })()}
+          {!(avatarUrl || session.user?.image) && (
+            <div className="w-[100px] h-[100px] rounded-full bg-gray-300 flex items-center justify-center">
+              <span className="text-gray-500">No Image</span>
+            </div>
           )}
           <div>
             <h2 className="text-lg font-semibold">{session.user.name}</h2>

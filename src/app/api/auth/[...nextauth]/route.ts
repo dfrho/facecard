@@ -42,9 +42,18 @@ const handler = NextAuth({
       return `${baseUrl}/create-profile` // Default redirect
     },
     async session({ session, token }) {
+      // Ensure session.user exists before assignment
+      if (!session.user) {
+        // This case should theoretically not happen if a token exists,
+        // but needed for type safety. Initialize with base properties.
+        session.user = { name: null, email: null, image: null }; 
+      }
       // Assign properties from token to session.user
-      if (token.sub) session.user.id = token.sub;
-      if (token.name) session.user.name = token.name;
+      // Use combined check and 'as any' assertion for id
+      if (session.user && token.sub) {
+         (session.user as any).id = token.sub;
+      }
+      if (token.name) session.user.name = token.name; // Base type properties are fine
       if (token.email) session.user.email = token.email;
       if (token.picture) session.user.image = token.picture;
       return session;
@@ -55,13 +64,16 @@ const handler = NextAuth({
         token.accessToken = account.access_token;
         token.id = user.id;
         // Keep existing token picture if profile doesn't provide one
-        token.picture = profile?.picture ?? token.picture;
+        // Use 'as any' assertion for profile.picture
+        token.picture = (profile as any)?.picture ?? token.picture;
       }
       // Add profile info to token if available (covers LinkedIn)
       if (profile) {
          token.name = profile.name ?? token.name;
          token.email = profile.email ?? token.email;
-         token.picture = profile.picture ?? token.picture;
+         // Assign profile picture if available, otherwise keep existing token picture
+         // Use 'as any' assertion for profile.picture
+         token.picture = (profile as any)?.picture ?? token.picture;
          // Ensure 'sub' from profile is assigned if not already set by 'user.id'
          if (!token.sub && profile.sub) {
             token.sub = profile.sub;

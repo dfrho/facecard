@@ -77,9 +77,6 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          <Link href="/create-profile">
-            <Button>Get Started</Button>
-          </Link>
         </nav>
 
         {/* Mobile Menu Button */}
