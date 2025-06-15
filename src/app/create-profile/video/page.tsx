@@ -50,7 +50,7 @@ function VideoPageContent() {
   const [isModalButtonConfigured, setIsModalButtonConfigured] = useState(false); // Track if modal button is configured
   const [isVideoAvailable, setIsVideoAvailable] = useState(false); // State for video availability
   const [error, setError] = useState<string | null>(null); // Add error state
-  const [isLoomConfigured, setIsLoomConfigured] = useState(false); // Ensure this state exists
+  const loomSDKInitializedRef = useRef(false); // Ref to track SDK initialization
   console.log(">>> Current NODE_ENV:", process.env.NODE_ENV);
   // Determine which Loom App ID to use based on the environment
   const loomPublicAppId =
@@ -68,19 +68,19 @@ function VideoPageContent() {
       if (!support.supported) {
         console.warn(">>> [setupLoom] Loom SDK not supported:", support.error);
         setLoomStatus('unsupported');
-        setError(
-          `Your browser does not support video recording${support.error ? `: ${support.error}` : '.'}. Please try using a different browser.`
-        );
-        return;
+        const notSupportedErrorMsg = `Your browser does not support video recording${support.error ? `: ${support.error}` : '.'}. Please try using a different browser.`;
+        setError(notSupportedErrorMsg);
+        throw new Error("Loom SDK not supported: " + (support.error || 'Unknown reason'));
       }
       console.log(">>> [setupLoom] isSupported check passed.");
 
       // 2. Check for valid App ID (must be string)
       if (typeof loomPublicAppId !== 'string' || !loomPublicAppId) {
         console.error(">>> [setupLoom] Invalid or missing Loom Public App ID.");
-        setError("Loom configuration is missing. Cannot initialize recorder.");
+        const missingIdErrorMsg = "Loom configuration is missing. Cannot initialize recorder.";
+        setError(missingIdErrorMsg);
         setLoomStatus('error');
-        return;
+        throw new Error("Invalid or missing Loom Public App ID.");
       }
       console.log(">>> [setupLoom] App ID check passed.");
 
@@ -95,8 +95,10 @@ function VideoPageContent() {
       // 4. Configure button
       if (!configureButton) {
         console.error(">>> [setupLoom] configureButton function not returned from createInstance!");
-        setError("Failed to get Loom configuration function.");
-        return;
+        const noConfigureFnErrorMsg = "Failed to get Loom configuration function.";
+        setError(noConfigureFnErrorMsg);
+        setLoomStatus('error');
+        throw new Error("configureButton function not returned from createInstance.");
       }
 
       const sdkButton = configureButton({ element: buttonElement });
@@ -106,8 +108,10 @@ function VideoPageContent() {
       // Defensive check: ensure sdkButton looks like a valid object with 'on' method
       if (!sdkButton || typeof sdkButton.on !== 'function') {
         console.error(">>> [setupLoom] Failed to get valid sdkButton object (or .on method missing)!");
-        setError("Failed to configure Loom button object.");
-        return;
+        const invalidSdkButtonErrorMsg = "Failed to configure Loom button object.";
+        setError(invalidSdkButtonErrorMsg);
+        setLoomStatus('error');
+        throw new Error("Invalid sdkButton object received from configureButton.");
       }
 
       // 5. Attach event listeners with correct names
@@ -157,36 +161,56 @@ function VideoPageContent() {
       console.log(">>> [setupLoom] Setup completed successfully.");
       setLoomStatus('supported'); // Mark as supported if setup succeeds
 
-    } catch (error) {
-      console.error('Error setting up Loom SDK:', error);
-      setError('Failed to initialize video recording. Please refresh the page.');
+    } catch (err) {
+      const error = err as Error; // Type assertion
+      console.error('Error setting up Loom SDK:', error.message);
+      // Ensure setError and setLoomStatus are called if not already by specific checks
+      // This might be redundant if all specific checks already set these, but acts as a fallback.
+      if (loomStatus !== 'error' && loomStatus !== 'unsupported') {
+        setError('Failed to initialize video recording. Please refresh the page or check console.');
+        setLoomStatus('error');
+      }
+      throw error; // Re-throw the error to be caught by modalButtonRefCallback
     }
-  }, [loomPublicAppId]);
+  }, [loomPublicAppId, setError, setLoomStatus]); // Added setError and setLoomStatus to deps
 
   // Ref callback to configure Loom button when it's mounted
   const modalButtonRefCallback = useCallback((node: HTMLButtonElement | null) => {
     // Debugging logs
     console.log(">>> [modalButtonRefCallback] Called. Node:", node);
     console.log(`    - loomPublicAppId present: ${!!loomPublicAppId}`);
-    console.log(`    - isModalButtonConfigured: ${isModalButtonConfigured}`);
+    console.log(`    - loomSDKInitializedRef.current: ${loomSDKInitializedRef.current}`);
 
-    if (node && loomPublicAppId && !isModalButtonConfigured && !isLoomConfigured) {
+    if (node && loomPublicAppId && !loomSDKInitializedRef.current) {
       console.log(">>> [modalButtonRefCallback] Conditions met. Calling setupLoom...");
-      setupLoom(node); // Pass the button node to setup
-      setIsModalButtonConfigured(true); // Mark as configured
-      setIsLoomConfigured(true); // Mark Loom as configured
+      setupLoom(node)
+        .then(() => {
+          loomSDKInitializedRef.current = true; // Mark SDK as initialized
+          setIsModalButtonConfigured(true); // Mark button as configured for UI updates
+        })
+        .catch(setupError => {
+          console.error(">>> [modalButtonRefCallback] setupLoom promise rejected:", setupError.message);
+          // Ensure UI reflects that the button is not ready/configured
+          setIsModalButtonConfigured(false);
+          // loomSDKInitializedRef.current remains false or its previous state (should be false if setup failed)
+          // setError and setLoomStatus are primarily handled within setupLoom now.
+        });
+    } else if (node && loomSDKInitializedRef.current) {
+      console.log(">>> [modalButtonRefCallback] SDK already initialized. Ensuring button is enabled.");
+      // If SDK is initialized but button was somehow disabled by other logic, ensure it's configured for UI
+      if (!isModalButtonConfigured) setIsModalButtonConfigured(true);
     } else if (node && !loomPublicAppId) {
       console.warn(">>> [modalButtonRefCallback] Node exists, but App ID missing.");
       node.disabled = true;
       console.warn('Loom button rendered, but Public App ID is missing.');
     } else if (!node) {
-      console.log(">>> modalButtonRefCallback cleanup running."); // Existing log
-      setIsModalButtonConfigured(false); // Reset configuration status on unmount
-      setIsLoomConfigured(false); // Reset Loom configuration status on unmount
-    } else if (isModalButtonConfigured) {
-      console.log(">>> [modalButtonRefCallback] Conditions not met (already configured). Skipping setupLoom.");
+      console.log(">>> modalButtonRefCallback cleanup running (node is null).");
+      loomSDKInitializedRef.current = false; // Reset SDK initialization status
+      setIsModalButtonConfigured(false); // Reset button UI configuration state
+    } else if (loomSDKInitializedRef.current) {
+      console.log(">>> [modalButtonRefCallback] Conditions not met (already initialized or App ID missing). Skipping setupLoom.");
     }
-  }, [loomPublicAppId, isModalButtonConfigured, setupLoom, setIsModalButtonConfigured, isLoomConfigured]);
+  }, [loomPublicAppId, setupLoom, isModalButtonConfigured, setIsModalButtonConfigured, loomSDKInitializedRef]);
 
   // Use useCallback to memoize checkLoomSupport
   const checkLoomSupport = useCallback(async () => {
@@ -222,6 +246,8 @@ function VideoPageContent() {
 
   // Effect to check Loom support on mount
   useEffect(() => {
+    // No change to checkLoomSupport needed based on current request,
+    // but it's good to ensure its error handling is also robust if it sets similar states.
     if (isMounted) {
       checkLoomSupport();
     }
@@ -304,12 +330,14 @@ function VideoPageContent() {
                 >
                   {isMounted
                     ? loomStatus === 'supported'
-                      ? isVideoAvailable ? 'Record Again' : 'Record Video'
+                    ? isVideoAvailable ? 'Record Again' : 'Record Video' // Video available means SDK was supported
                       : loomStatus === 'pending'
-                      ? 'Checking Loom...'
+                    ? 'Checking Support...'
                       : loomStatus === 'unsupported'
-                      ? 'Loom Not Supported'
-                      : 'Loom Setup Error'
+                    ? 'Browser Not Supported'
+                    : loomStatus === 'error'
+                    ? 'Loom Setup Error' // Generic error from SDK setup
+                    : 'Record Video' // Default if supported but no video yet
                     : 'Loading...'}
                 </Button>
               </DialogTrigger>
@@ -325,9 +353,19 @@ function VideoPageContent() {
                   <Button
                     ref={modalButtonRefCallback} // Use the callback ref here
                     id="modal-loom-record-button"
-                    disabled={!isModalButtonConfigured || !isMounted}
+                    // Disable if not mounted OR if SDK is not initialized (isModalButtonConfigured is false)
+                    // OR if there's an error/unsupported status from the initial checkLoomSupport via loomStatus
+                    disabled={!isMounted || !isModalButtonConfigured || loomStatus === 'error' || loomStatus === 'unsupported'}
                   >
-                    {isModalButtonConfigured ? 'Continue to Recording' : 'Loom Loading...'}
+                    {isMounted
+                      ? loomStatus === 'unsupported'
+                        ? 'Browser Not Supported'
+                        : loomStatus === 'error'
+                          ? 'Error Loading Loom'
+                          : isModalButtonConfigured
+                            ? 'Continue to Recording'
+                            : 'Loom Loading...'
+                      : 'Loading...'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
