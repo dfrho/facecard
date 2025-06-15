@@ -77,8 +77,13 @@ async function generateScriptWithOpenAI(
     return result;
 
   } catch (error) {
-    // Fall back to local generation if API fails
-    return generateEnhancedScript(profileData);
+    // Log the specific error from the OpenAI API call
+    console.error('Error calling OpenAI API:', error);
+    
+    // Re-throw the error to indicate failure instead of returning boilerplate
+    // You could customize the error message if needed
+    const message = error instanceof Error ? error.message : 'Unknown OpenAI API error';
+    throw new Error(`OpenAI API call failed: ${message}`);
   }
 }
 

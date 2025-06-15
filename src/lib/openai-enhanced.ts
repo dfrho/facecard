@@ -10,29 +10,22 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  */
 export async function generateScript(profileData: ProfileFormData): Promise<string> {
   try {
-    // Check if we should use the API or fallback
     if (OPENAI_API_KEY) {
-      try {
-        // Log attempt to use API
-        // console.log('Attempting to use OpenAI API with key available:', !!OPENAI_API_KEY);
-        
-        // First try the API route
-        return await callAPIRoute(profileData);
-      } catch (apiError) {
-        // console.warn('API route failed:', apiError);
-        // Fall back to local generation
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return generateEnhancedScript(profileData);
-      }
+      // Key is present, attempt to call the API route directly.
+      // If callAPIRoute fails, the error will propagate up.
+      console.log('OpenAI API key found, attempting API call...');
+      return await callAPIRoute(profileData);
     } else {
-      // No API key available, use the enhanced template
-      // console.log('No OpenAI API key available, using enhanced template');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      return generateEnhancedScript(profileData);
+      // No API key available, throw an error.
+      console.error('OpenAI API key is not configured.');
+      throw new Error('OpenAI API key is not configured. Cannot generate script via API.');
     }
   } catch (error) {
-    // console.error('Error generating script:', error);
-    throw new Error('Failed to generate script. Please try again.');
+    console.error('Error in generateScript:', error);
+    // Re-throw the original error or a more user-friendly one
+    // Check if error is an instance of Error to access message safely
+    const message = error instanceof Error ? error.message : 'An unknown error occurred during script generation.';
+    throw new Error(`Failed to generate script: ${message}`);
   }
 }
 

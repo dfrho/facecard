@@ -18,9 +18,6 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                <Link href="/create-profile" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full">Get Started</Button>
-                </Link>
                 <Link href="/features" className="w-full sm:w-auto">
                   <Button size="lg" variant="outline" className="w-full">Learn More</Button>
                 </Link>
