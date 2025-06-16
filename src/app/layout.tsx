@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <meta name="referrer" content="origin" />
         {/* Standard head elements go here */}
       </head>
       <body className={inter.className}>
