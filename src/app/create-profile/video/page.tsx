@@ -1,180 +1,319 @@
-import Link from "next/link";
+'use client'; // Mark as client component
+
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react"; // Import useEffect, useState, useRef
+import { useSearchParams } from 'next/navigation'; // Import useSearchParams
+import { createInstance } from "@loomhq/record-sdk"; // Use createInstance
+import { isSupported } from "@loomhq/record-sdk/is-supported"; // Import isSupported separately
+import { oembed } from "@loomhq/loom-embed";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'; // Import Dialog components
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card"; // Import Card components
 
 export default function VideoPage() {
   return (
+    <Suspense fallback={<div>Loading script...</div>}>
+      <VideoPageContent />
+    </Suspense>
+  );
+}
+
+// Inner component that uses client-side hooks
+function VideoPageContent() {
+  const searchParams = useSearchParams(); // Get search params
+  const [scriptContent, setScriptContent] = useState<string | null>(null);
+
+  const [loomVideoHtml, setLoomVideoHtml] = useState<string | null>(null);
+  const loomButtonRef = useRef<HTMLButtonElement>(null);
+  const [isMounted, setIsMounted] = useState(false); // State for hydration check
+  const [isInstructionModalOpen, setIsInstructionModalOpen] = useState(false); // State for modal
+  const [loomStatus, setLoomStatus] = useState<'pending' | 'supported' | 'unsupported' | 'error'>('pending'); // Track SDK status
+  const [isModalButtonConfigured, setIsModalButtonConfigured] = useState(false); // Track if modal button is configured
+  const [isVideoAvailable, setIsVideoAvailable] = useState(false); // State for video availability
+  const [error, setError] = useState<string | null>(null); // Add error state
+  const loomSDKInitializedRef = useRef(false); // Ref to track SDK initialization
+  // Determine which Loom App ID to use based on the environment
+  const loomPublicAppId =
+    process.env.NODE_ENV === 'development'
+      ? process.env.NEXT_PUBLIC_LOOM_SANDBOX_PUBLIC_APP_ID
+      : process.env.NEXT_PUBLIC_LOOM_PUBLIC_APP_ID;
+
+  // Function to setup Loom SDK
+  const setupLoom = useCallback(async (buttonElement: HTMLButtonElement) => {
+    try {
+      // 1. Check support first
+      const support = await isSupported();
+      if (!support.supported) {
+        setLoomStatus('unsupported');
+        const notSupportedErrorMsg = `Your browser does not support video recording${support.error ? `: ${support.error}` : '.'}. Please try using a different browser.`;
+        setError(notSupportedErrorMsg);
+        throw new Error("Loom SDK not supported: " + (support.error || 'Unknown reason'));
+      }
+
+      // 2. Check for valid App ID (must be string)
+      if (typeof loomPublicAppId !== 'string' || !loomPublicAppId) {
+        const missingIdErrorMsg = "Loom configuration is missing. Cannot initialize recorder.";
+        setError(missingIdErrorMsg);
+        setLoomStatus('error');
+        throw new Error("Invalid or missing Loom Public App ID.");
+      }
+
+      // 3. Create instance (App ID is now guaranteed to be a string)
+      const { configureButton } = await createInstance({
+        publicAppId: loomPublicAppId,
+        mode: 'standard',
+      });
+
+      // 4. Configure button
+      if (!configureButton) {
+        const noConfigureFnErrorMsg = "Failed to get Loom configuration function.";
+        setError(noConfigureFnErrorMsg);
+        setLoomStatus('error');
+        throw new Error("configureButton function not returned from createInstance.");
+      }
+
+      const sdkButton = configureButton({ element: buttonElement });
+
+      // Defensive check: ensure sdkButton looks like a valid object with 'on' method
+      if (!sdkButton || typeof sdkButton.on !== 'function') {
+        const invalidSdkButtonErrorMsg = "Failed to configure Loom button object.";
+        setError(invalidSdkButtonErrorMsg);
+        setLoomStatus('error');
+        throw new Error("Invalid sdkButton object received from configureButton.");
+      }
+
+      // 5. Attach event listeners with correct names
+      sdkButton.on('insert-click', async (record) => {
+        const { sharedUrl } = record;
+        if (sharedUrl) {
+          try {
+            const { html } = await oembed(sharedUrl);
+            setLoomVideoHtml(html);
+            setIsVideoAvailable(true);
+            setIsInstructionModalOpen(false);
+          } catch (oembedError) {
+            // Keep this console.error as it's a genuine runtime error condition
+            console.error('Error fetching Loom oEmbed data:', oembedError);
+            setError('Failed to load video embed details. Please try inserting again.');
+          }
+        } else {
+          // Keep this console.error as it's a genuine runtime error condition
+          console.error('Loom insert-click payload did not contain sharedUrl:', record);
+          setError('Failed to get video URL from Loom.');
+        }
+      });
+
+      sdkButton.on('cancel', () => {
+        setLoomVideoHtml(null);
+        setIsVideoAvailable(false);
+      });
+
+      sdkButton.on('complete', () => {
+        // Placeholder for any logic on recording completion
+      });
+
+      setLoomStatus('supported'); // Mark as supported if setup succeeds
+
+    } catch (err) {
+      const error = err as Error;
+      // Ensure setError and setLoomStatus are called if not already by specific checks
+      if (loomStatus !== 'error' && loomStatus !== 'unsupported') {
+        setError('Failed to initialize video recording. Please refresh the page or check console.');
+        setLoomStatus('error');
+      }
+      throw error; // Re-throw the error to be caught by modalButtonRefCallback
+    }
+  }, [loomPublicAppId, setError, setLoomStatus, loomStatus]);
+
+  // Ref callback to configure Loom button when it's mounted
+  const modalButtonRefCallback = useCallback((node: HTMLButtonElement | null) => {
+    if (node && loomPublicAppId && !loomSDKInitializedRef.current) {
+      setupLoom(node)
+        .then(() => {
+          loomSDKInitializedRef.current = true;
+          setIsModalButtonConfigured(true);
+        })
+        .catch(() => {
+          // Error is logged and state set within setupLoom or its rethrow handler
+          setIsModalButtonConfigured(false);
+          loomSDKInitializedRef.current = false;
+        });
+    } else if (node && loomSDKInitializedRef.current) {
+      setIsModalButtonConfigured(true);
+    } else if (node && !loomPublicAppId) {
+      node.disabled = true;
+    } else if (!node) {
+      loomSDKInitializedRef.current = false;
+      setIsModalButtonConfigured(false);
+    }
+  }, [loomPublicAppId, setupLoom]);
+
+  // Use useCallback to memoize checkLoomSupport
+  const checkLoomSupport = useCallback(async () => {
+    setLoomStatus('pending'); // Reset status on check
+    // Check for App ID existence here
+    if (!loomPublicAppId) {
+      console.error(`Loom Public App ID is not configured for ${process.env.NODE_ENV} environment.`);
+      // Update UI - disable trigger button?
+      if (loomButtonRef.current) {
+        loomButtonRef.current.disabled = true;
+        loomButtonRef.current.textContent = "Loom Unavailable";
+      }
+      setLoomStatus('error');
+      return;
+    }
+
+    const { supported, error } = await isSupported();
+
+    if (!supported) {
+      console.warn(`Loom SDK not supported: ${error}`);
+      // Update status and disable trigger button
+      if (loomButtonRef.current) {
+        loomButtonRef.current.disabled = true;
+        loomButtonRef.current.textContent = "Loom Not Supported";
+      }
+      setLoomStatus('unsupported');
+      return;
+    }
+
+    console.log('Loom is supported.');
+    setLoomStatus('supported'); // Mark as supported, ready for modal config
+  }, [loomPublicAppId]);
+
+  // Effect to check Loom support on mount
+  useEffect(() => {
+    if (isMounted) {
+      checkLoomSupport();
+    }
+  }, [isMounted, checkLoomSupport]);
+
+  // Effect to track component mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Effect to read script from URL query params
+  useEffect(() => {
+    const scriptParam = searchParams.get('script');
+    if (scriptParam) {
+      try {
+        setScriptContent(decodeURIComponent(scriptParam));
+      } catch (e) {
+        // Keep this console.error as it's a genuine runtime error condition
+        console.error("Error decoding script parameter:", e);
+        setScriptContent("Error loading script.");
+      }
+    } else {
+      setScriptContent("No script provided.");
+    }
+  }, [searchParams]);
+
+  return (
     <div className="container max-w-4xl py-12">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Your AI-Generated Video</h1>
-          <p className="text-muted-foreground">
-            Preview your video business card and share it with your network.
-          </p>
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Left Column: Script Display */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Your Script</h2>
+          <Card className="bg-muted/40 h-[400px] overflow-y-auto"> {/* Fixed height and scroll */} 
+            <CardContent className="pt-6">
+              {scriptContent ? (
+                <p className="whitespace-pre-wrap">{scriptContent}</p> // Preserve whitespace
+              ) : (
+                <p className="text-muted-foreground">Loading script...</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
-        
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Video Preview</h2>
-              <p className="text-sm text-muted-foreground">
-                Your AI-generated video business card based on your profile and script.
+
+        {/* Right Column: Video Recording */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Record Your Video</h2>
+          {/* Video Embed Area */}
+          {loomVideoHtml ? (
+            <div
+              className="aspect-video w-full rounded-lg overflow-hidden shadow-lg"
+              dangerouslySetInnerHTML={{ __html: loomVideoHtml }}
+            />
+          ) : (
+            <div className="aspect-video w-full rounded-lg bg-muted flex items-center justify-center">
+              <p className="text-muted-foreground text-center px-4">
+                {isVideoAvailable
+                  ? 'Video processing...'
+                  : 'Click &quot;Record Video&quot; below. Your video will appear here after recording.'}
               </p>
             </div>
-            
-            <div className="overflow-hidden rounded-xl border shadow-sm">
-              <div className="aspect-video bg-muted flex items-center justify-center">
-                <div className="text-center">
-                  <div className="mb-4 flex justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="48"
-                      height="48"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-muted-foreground"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <polygon points="10 8 16 12 10 16 10 8" />
-                    </svg>
-                  </div>
-                  <p className="text-lg font-medium">Your Video Will Appear Here</p>
-                  <p className="text-sm text-muted-foreground">
-                    Click the button below to generate your video
-                  </p>
-                </div>
-              </div>
+          )}
+          {/* Error Display Area */}
+          {error && (
+            <div className="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+              <p>{error}</p>
             </div>
-            
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <Button className="w-full max-w-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-2 h-4 w-4"
-                  >
-                    <path d="M4 11v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8" />
-                    <path d="M4 5v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5" />
-                    <path d="M14.5 5V3a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v2" />
-                    <line x1="12" y1="10" x2="12" y2="16" />
-                    <line x1="9" y1="13" x2="15" y2="13" />
-                  </svg>
-                  Generate Video
+          )}
+          {/* Recording Controls / Button Area */}
+          <div className="flex justify-center pt-4">
+            <Dialog open={isInstructionModalOpen} onOpenChange={setIsInstructionModalOpen}>
+              <DialogTrigger asChild>
+                {/* Main trigger button */}
+                <Button
+                  ref={loomButtonRef}
+                  id="loom-record-trigger-button"
+                  disabled={!isMounted || loomStatus !== 'supported'}
+                  variant="default"
+                  size="lg"
+                  onClick={() => setIsInstructionModalOpen(true)} // Open modal on click
+                >
+                  {isMounted
+                    ? loomStatus === 'supported'
+                    ? isVideoAvailable ? 'Record Again' : 'Record Video' // Video available means SDK was supported
+                      : loomStatus === 'pending'
+                    ? 'Checking Support...'
+                      : loomStatus === 'unsupported'
+                    ? 'Browser Not Supported'
+                    : loomStatus === 'error'
+                    ? 'Loom Setup Error' // Generic error from SDK setup
+                    : 'Record Video' // Default if supported but no video yet
+                    : 'Loading...'}
                 </Button>
-              </div>
-              
-              <div className="rounded-xl border p-4">
-                <h3 className="text-lg font-medium mb-2">Video Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="avatar-style">Avatar Style</Label>
-                    <select
-                      id="avatar-style"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="realistic">Realistic</option>
-                      <option value="animated">Animated</option>
-                      <option value="stylized">Stylized</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="background">Background</Label>
-                    <select
-                      id="background"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="office">Office</option>
-                      <option value="gradient">Gradient</option>
-                      <option value="cityscape">Cityscape</option>
-                      <option value="abstract">Abstract</option>
-                      <option value="custom">Custom (Upload)</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="voice-style">Voice Style</Label>
-                    <select
-                      id="voice-style"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="professional">Professional</option>
-                      <option value="friendly">Friendly</option>
-                      <option value="energetic">Energetic</option>
-                      <option value="calm">Calm</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Target Duration</Label>
-                    <select
-                      id="duration"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="15">15 seconds</option>
-                      <option value="20">20 seconds</option>
-                      <option value="30">30 seconds</option>
-                      <option value="45">45 seconds</option>
-                      <option value="60">60 seconds</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="rounded-xl border p-4">
-                <h3 className="text-lg font-medium mb-2">Branding</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="logo">Logo (Optional)</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="logo"
-                        type="file"
-                        className="flex h-10 w-full"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="colors">Brand Colors (Optional)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="primaryColor"
-                        type="color"
-                        className="w-16 h-10 p-1"
-                      />
-                      <Input
-                        id="secondaryColor"
-                        type="color"
-                        className="w-16 h-10 p-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-between">
-              <Link href="/create-profile/script">
-                <Button variant="outline">Back</Button>
-              </Link>
-              <Link href="/create-profile/share">
-                <Button>Share Video</Button>
-              </Link>
-            </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Prepare for Recording</DialogTitle>
+                  <DialogDescription>
+                    Please select &quot;Camera Only&quot; in the Loom interface that appears next before starting your recording.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  {/* This button is now configured by Loom */}
+                  <Button
+                    ref={modalButtonRefCallback} // Use the callback ref here
+                    id="modal-loom-record-button"
+                    // Disable if not mounted OR if SDK is not initialized (isModalButtonConfigured is false)
+                    // OR if there's an error/unsupported status from the initial checkLoomSupport via loomStatus
+                    disabled={!isMounted || !isModalButtonConfigured || loomStatus === 'error' || loomStatus === 'unsupported'}
+                  >
+                    {isMounted
+                      ? loomStatus === 'unsupported'
+                        ? 'Browser Not Supported'
+                        : loomStatus === 'error'
+                          ? 'Error Loading Loom'
+                          : isModalButtonConfigured
+                            ? 'Continue to Recording'
+                            : 'Loom Loading...'
+                      : 'Loading...'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>

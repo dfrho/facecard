@@ -4,7 +4,7 @@ import './globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import React from 'react';
-import { Providers } from '@/components/providers'; // Import the client side provider
+import { Providers } from '@/components/providers'; 
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -16,10 +16,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="referrer" content="origin" />
+        {/* Standard head elements go here */}
+      </head>
       <body className={inter.className}>
         <Providers>
-          {' '}
-          {/* Wrap your content with Providers */}
           <div className="relative flex min-h-screen flex-col">
             <Header />
             <main className="flex-1">{children}</main>

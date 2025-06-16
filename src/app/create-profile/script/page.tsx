@@ -117,7 +117,12 @@ export default function ScriptPage() {
       });
 
       saveFormData(updatedFormData, 'script');
-      router.push('/create-profile/video');
+
+      // Encode the script for the URL
+      const encodedScript = encodeURIComponent(editedScript);
+
+      // Navigate to the video page with the script as a query parameter
+      router.push(`/create-profile/video?script=${encodedScript}`);
     } catch (error) {
       console.error('Error saving script:', error);
       setError('Failed to save script. Please try again.');
