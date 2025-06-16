@@ -192,13 +192,13 @@ function VideoPageContent() {
           console.error(">>> [modalButtonRefCallback] setupLoom promise rejected:", setupError.message);
           // Ensure UI reflects that the button is not ready/configured
           setIsModalButtonConfigured(false);
-          // loomSDKInitializedRef.current remains false or its previous state (should be false if setup failed)
+          loomSDKInitializedRef.current = false; // Ensure initialized ref is false if setup fails
           // setError and setLoomStatus are primarily handled within setupLoom now.
         });
     } else if (node && loomSDKInitializedRef.current) {
-      console.log(">>> [modalButtonRefCallback] SDK already initialized. Ensuring button is enabled.");
-      // If SDK is initialized but button was somehow disabled by other logic, ensure it's configured for UI
-      if (!isModalButtonConfigured) setIsModalButtonConfigured(true);
+      console.log(">>> [modalButtonRefCallback] SDK already initialized. Ensuring button is configured for UI.");
+      // If SDK was previously initialized successfully, ensure the button state reflects this.
+      setIsModalButtonConfigured(true);
     } else if (node && !loomPublicAppId) {
       console.warn(">>> [modalButtonRefCallback] Node exists, but App ID missing.");
       node.disabled = true;
@@ -207,10 +207,17 @@ function VideoPageContent() {
       console.log(">>> modalButtonRefCallback cleanup running (node is null).");
       loomSDKInitializedRef.current = false; // Reset SDK initialization status
       setIsModalButtonConfigured(false); // Reset button UI configuration state
-    } else if (loomSDKInitializedRef.current) {
-      console.log(">>> [modalButtonRefCallback] Conditions not met (already initialized or App ID missing). Skipping setupLoom.");
+    } else if (node && !loomSDKInitializedRef.current) {
+      // This case handles when the node is present, App ID is present, but SDK is not yet initialized.
+      // It's covered by the first `if` block, but adding a log here for clarity or future conditions.
+      console.log(">>> [modalButtonRefCallback] Node present, App ID present, SDK not initialized - setupLoom should be called.");
+    } else {
+      // Catch-all for other conditions, e.g. node is present but loomSDKInitializedRef.current is true (already handled)
+      // or other unexpected states.
+      console.log(">>> [modalButtonRefCallback] Conditions not met for setupLoom or cleanup. Current state:",
+        `node: ${!!node}, loomPublicAppId: ${!!loomPublicAppId}, loomSDKInitializedRef: ${loomSDKInitializedRef.current}`);
     }
-  }, [loomPublicAppId, setupLoom, isModalButtonConfigured, setIsModalButtonConfigured, loomSDKInitializedRef]);
+  }, [loomPublicAppId, setupLoom]); // Dependencies updated
 
   // Use useCallback to memoize checkLoomSupport
   const checkLoomSupport = useCallback(async () => {
