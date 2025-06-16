@@ -1,6 +1,5 @@
 import { ProfileFormData, ScriptVersion } from "@/types/profile";
 import { generateUniqueId } from './script-utils';
-import { generateEnhancedScript } from './script-generator';
 
 // API key from environment variables
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -13,15 +12,12 @@ export async function generateScript(profileData: ProfileFormData): Promise<stri
     if (OPENAI_API_KEY) {
       // Key is present, attempt to call the API route directly.
       // If callAPIRoute fails, the error will propagate up.
-      console.log('OpenAI API key found, attempting API call...');
       return await callAPIRoute(profileData);
     } else {
       // No API key available, throw an error.
-      console.error('OpenAI API key is not configured.');
       throw new Error('OpenAI API key is not configured. Cannot generate script via API.');
     }
   } catch (error) {
-    console.error('Error in generateScript:', error);
     // Re-throw the original error or a more user-friendly one
     // Check if error is an instance of Error to access message safely
     const message = error instanceof Error ? error.message : 'An unknown error occurred during script generation.';
