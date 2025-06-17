@@ -51,8 +51,11 @@ export function Header() {
           </Link>
           {session ? (
             <div className="flex items-center space-x-2">
+              <Link href="/my-profile">
+                <Button variant="ghost">My Profile</Button>
+              </Link>
               {session.user?.image && (
-                <Link href="/create-profile/profile">
+                <Link href="/create-profile/profile"> {/* Consider if this link should also go to /my-profile */}
                   <Image
                     src={session.user.image}
                     alt="User Avatar"
@@ -137,26 +140,33 @@ export function Header() {
               </Button>
             </Link>
             {session ? (
-              <div className="flex items-center space-x-2">
-                {session.user?.image && (
-                  <Link href="/create-profile/profile">
-                    <Image
-                      src={session.user.image}
-                      alt="User Avatar"
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                  </Link>
-                )}
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </div>
+              <> {/* Use a fragment if adding multiple elements at the same level */}
+                <Link href="/my-profile" className="block">
+                  <Button variant="ghost" className="w-full justify-start">
+                    My Profile
+                  </Button>
+                </Link>
+                <div className="flex items-center space-x-2"> {/* Original structure for avatar/logout */}
+                  {session.user?.image && (
+                    <Link href="/create-profile/profile"> {/* Consider if this link should also go to /my-profile */}
+                      <Image
+                        src={session.user.image}
+                        alt="User Avatar"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                      />
+                    </Link>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                </div>
+              </>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
