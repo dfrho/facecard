@@ -10,7 +10,11 @@ module.exports = {
   theme: {
   	container: {
   		center: true,
-  		padding: '2rem',
+		padding: {
+			DEFAULT: '1rem',
+			sm: '1rem', // Or your desired small breakpoint
+			md: '2rem', // Keep 2rem for medium and up
+		},
   		screens: {
   			'2xl': '1400px'
   		}
