@@ -149,6 +149,8 @@ REQUIREMENTS:
 8. Structure the script with natural paragraph breaks for easier performance
 9. Adapt your language style to match their industry and personality
 10. Include ONLY the script text, no other instructions or explanations
+11. NO scene directions, stage directions, or bracketed instructions of any kind (e.g. no "[Scene: ...]", "[Camera pans...]", "[Fade out]", etc.)
+12. Output ONLY the spoken words the person will say — nothing else
 
 SCRIPT:
 `;

@@ -1,8 +1,9 @@
 'use client'; // Mark as client component
 
 import { Button } from "@/components/ui/button";
-import { useEffect, useState, useRef, useCallback, Suspense } from "react"; // Import useEffect, useState, useRef
-import { useSearchParams } from 'next/navigation'; // Import useSearchParams
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
+import { useSearchParams } from 'next/navigation';
+import { loadFormData } from '@/lib/form-utils';
 import { createInstance } from "@loomhq/record-sdk"; // Use createInstance
 import { isSupported } from "@loomhq/record-sdk/is-supported"; // Import isSupported separately
 import { oembed } from "@loomhq/loom-embed";
@@ -72,6 +73,10 @@ function VideoPageContent() {
       const { configureButton } = await createInstance({
         publicAppId: loomPublicAppId,
         mode: 'standard',
+        config: {
+          allowedRecordingTypes: ['cam' as never],
+          defaultRecordingType: 'cam' as never,
+        },
       });
 
       // 4. Configure button
@@ -202,34 +207,43 @@ function VideoPageContent() {
     setIsMounted(true);
   }, []);
 
-  // Effect to read script from URL query params
+  // Effect to read script: prefer stored form data, fall back to URL param
   useEffect(() => {
+    const stored = loadFormData();
+    if (stored?.generatedScript) {
+      setScriptContent(stored.generatedScript);
+      return;
+    }
     const scriptParam = searchParams.get('script');
     if (scriptParam) {
       try {
         setScriptContent(decodeURIComponent(scriptParam));
       } catch (e) {
-        // Keep this console.error as it's a genuine runtime error condition
         console.error("Error decoding script parameter:", e);
-        setScriptContent("Error loading script.");
+        setScriptContent(null);
       }
-    } else {
-      setScriptContent("No script provided.");
     }
   }, [searchParams]);
 
   return (
-    <div className="container max-w-4xl py-12">
+    <div className="container max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
+      <div className="space-y-8">
+        <div className="space-y-3">
+          <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">Step 4 of 5</span>
+          <h1 className="font-display italic text-3xl sm:text-4xl font-semibold text-foreground">
+            Record Your Video
+          </h1>
+        </div>
       <div className="grid md:grid-cols-2 gap-8">
         {/* Left Column: Script Display */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Your Script</h2>
+          <h2 className="font-display text-xl font-semibold text-foreground">Your Script</h2>
           <Card className="bg-muted/40 h-[400px] overflow-y-auto"> {/* Fixed height and scroll */} 
             <CardContent className="pt-6">
               {scriptContent ? (
-                <p className="whitespace-pre-wrap">{scriptContent}</p> // Preserve whitespace
+                <p className="whitespace-pre-wrap">{scriptContent}</p>
               ) : (
-                <p className="text-muted-foreground">Loading script...</p>
+                <p className="text-muted-foreground">No script found. Go back and generate one.</p>
               )}
             </CardContent>
           </Card>
@@ -237,7 +251,7 @@ function VideoPageContent() {
 
         {/* Right Column: Video Recording */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Record Your Video</h2>
+          <h2 className="font-display text-xl font-semibold text-foreground">Record</h2>
           {/* Video Embed Area */}
           {loomVideoHtml ? (
             <div
@@ -249,7 +263,7 @@ function VideoPageContent() {
               <p className="text-muted-foreground text-center px-4">
                 {isVideoAvailable
                   ? 'Video processing...'
-                  : 'Click &quot;Record Video&quot; below. Your video will appear here after recording.'}
+                  : 'Click "Record Video" below. Your video will appear here after recording.'}
               </p>
             </div>
           )}
@@ -316,6 +330,7 @@ function VideoPageContent() {
             </Dialog>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

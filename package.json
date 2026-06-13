@@ -1,5 +1,5 @@
 {
-    "name": "knowme",
+    "name": "facecard",
     "version": "0.1.0",
     "private": true,
     "scripts": {
@@ -9,6 +9,7 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@anthropic-ai/sdk": "^0.104.1",
         "@loomhq/loom-embed": "^1.7.0",
         "@loomhq/record-sdk": "^3.14.4",
         "@radix-ui/react-dialog": "^1.1.11",

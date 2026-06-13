@@ -20,7 +20,10 @@ const handler = NextAuth({
       token: 'https://www.linkedin.com/oauth/v2/accessToken',
       userinfo: 'https://api.linkedin.com/v2/userinfo',
       jwks_endpoint: 'https://www.linkedin.com/oauth/openid/jwks',
-      profile(profile: any) { 
+      client: {
+        token_endpoint_auth_method: 'client_secret_post',
+      },
+      profile(profile: any) {
         return {
           id: profile.sub,
           name: profile.name,
@@ -84,7 +87,9 @@ const handler = NextAuth({
       return token;
     },
   },
-  // Add session strategy if needed, JWT is default
+  pages: {
+    error: '/auth/error',
+  },
   session: {
     strategy: "jwt",
   },

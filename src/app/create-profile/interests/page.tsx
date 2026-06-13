@@ -80,21 +80,24 @@ export default function InterestsPage() {
   };
 
   return (
-    <div className="container max-w-4xl py-12">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Create Your Profile</h1>
-          <p className="text-muted-foreground">
-            Tell us about your skills and interests to complete your AI-powered video business card.
+    <div className="container max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
+      <div className="space-y-8">
+        <div className="space-y-3">
+          <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">Step 2 of 5</span>
+          <h1 className="font-display italic text-3xl sm:text-4xl font-semibold text-foreground">
+            Skills &amp; Interests
+          </h1>
+          <p className="font-sans-body text-muted-foreground sm:text-lg">
+            Tell us about your skills and interests to shape your video business card.
           </p>
         </div>
-        
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Step 2: Skills & Interests</h2>
-              <p className="text-sm text-muted-foreground">
-                These details will help us generate an engaging script that highlights your unique value.
+
+        <div className="rounded-xl border border-border bg-card p-5 sm:p-8 shadow-sm">
+          <div className="space-y-5">
+            <div className="space-y-1.5">
+              <h2 className="font-display text-xl font-semibold text-foreground">Your Expertise</h2>
+              <p className="font-sans-body text-sm text-muted-foreground">
+                These details will help us generate a script that highlights your unique value.
               </p>
             </div>
             

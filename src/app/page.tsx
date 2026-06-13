@@ -1,34 +1,71 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ResumeCard } from "@/components/resume-card";
 
 export default function Home() {
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-white to-gray-100 py-12 sm:py-16 md:py-20 dark:from-gray-900 dark:to-gray-800">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-            <div className="flex flex-col justify-center space-y-4 sm:space-y-6">
-              <div className="space-y-2 sm:space-y-3">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl xl:text-6xl">
+      {/* Hero */}
+      <section className="noise-bg relative overflow-hidden py-20 sm:py-28 md:py-36">
+        <div className="container relative z-10 px-4 md:px-6">
+          <div className="grid gap-16 lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="flex flex-col space-y-8">
+              <div className="space-y-4">
+                <span className="animate-fade-up-1 inline-block font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   AI-Powered Video Business Cards
+                </span>
+                <h1 className="animate-fade-up-2 font-display italic text-5xl font-semibold leading-[1.1] tracking-tight sm:text-6xl md:text-7xl text-foreground">
+                  Make your introduction{" "}
+                  <span className="text-primary">unforgettable.</span>
                 </h1>
-                <p className="max-w-[600px] text-gray-500 sm:text-lg md:text-xl dark:text-gray-400">
-                  Create compelling 15-30 second video introductions that clearly communicate your skills, offerings, and needs.
+                <p className="animate-fade-up-3 font-sans-body max-w-[520px] text-lg text-muted-foreground leading-relaxed">
+                  Create compelling 15–30 second video introductions that clearly communicate who you are, what you offer, and what you need.
                 </p>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                <Link href="/features" className="w-full sm:w-auto">
-                  <Button size="lg" variant="outline" className="w-full">Learn More</Button>
+              <div className="animate-fade-up-4 flex flex-col gap-3 sm:flex-row sm:gap-4">
+                <Link href="/create-profile">
+                  <Button size="lg" className="gap-2 text-base px-8">
+                    Get Started
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </Button>
+                </Link>
+                <Link href="/features">
+                  <Button size="lg" variant="outline" className="text-base px-8">
+                    See How It Works
+                  </Button>
                 </Link>
               </div>
             </div>
-            <div className="flex items-center justify-center pt-8 lg:pt-0">
-              <div className="relative h-[250px] w-[250px] sm:h-[300px] sm:w-[300px] md:h-[350px] md:w-[350px] rounded-xl bg-gradient-to-b from-blue-500 to-purple-600 p-1 shadow-2xl">
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white dark:bg-gray-950">
-                  <div className="text-center px-4">
-                    <p className="text-lg font-semibold">Video Preview</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Your AI-generated video will appear here</p>
+
+            {/* Abstract card mockup */}
+            <div className="animate-fade-up-3 hidden lg:flex items-center justify-center">
+              <div className="relative w-full max-w-sm">
+                <div className="absolute -top-4 -left-4 w-full h-full rounded-2xl border-2 border-primary/20 bg-card" />
+                <div className="relative rounded-2xl border border-border bg-card p-8 shadow-lg">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-primary/15 flex items-center justify-center">
+                        <span className="font-display italic text-primary text-lg font-semibold">K</span>
+                      </div>
+                      <div>
+                        <p className="font-display font-semibold text-foreground">Alex Rivera</p>
+                        <p className="font-sans-body text-sm text-muted-foreground">Product Designer · San Francisco</p>
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-background border border-border aspect-video flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/15" />
+                      <div className="relative flex flex-col items-center gap-2">
+                        <div className="h-10 w-10 rounded-full bg-primary/90 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-primary-foreground ml-0.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </div>
+                        <span className="font-sans-body text-xs text-muted-foreground">0:24</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="h-2 rounded-full bg-border w-full" />
+                      <div className="h-2 rounded-full bg-border w-4/5" />
+                      <div className="h-2 rounded-full bg-border w-3/5" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -37,111 +74,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 md:py-20 lg:py-24">
+      <ResumeCard />
+
+      {/* Features — numbered editorial layout */}
+      <section className="py-20 md:py-28">
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2 sm:space-y-3">
-              <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl md:text-4xl">Key Features</h2>
-              <p className="max-w-[900px] text-gray-500 sm:text-lg md:text-xl dark:text-gray-400">
-                Everything you need to create professional video business cards
-              </p>
-            </div>
+          <div className="mb-16 space-y-3">
+            <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">What you get</span>
+            <h2 className="font-display italic text-4xl font-semibold text-foreground sm:text-5xl">
+              Everything you need<br />to stand out.
+            </h2>
           </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-8 sm:py-10 md:py-12 sm:grid-cols-2 md:grid-cols-3">
-            <div className="flex flex-col items-center space-y-3 rounded-lg border p-5 sm:p-6 shadow-sm">
-              <div className="rounded-full bg-primary/10 p-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-6 w-6 text-primary"
-                >
-                  <rect width="18" height="18" x="3" y="3" rx="2" />
-                  <path d="M7 7h10v2H7z" />
-                  <path d="M7 11h5v2H7z" />
-                  <path d="M7 15h8v2H7z" />
-                </svg>
+
+          <div className="divide-y divide-border">
+            <div className="grid grid-cols-[64px_1fr] gap-8 py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
+              <span className="font-display italic text-5xl font-semibold text-primary leading-none">01</span>
+              <div className="space-y-2">
+                <h3 className="font-display text-2xl font-semibold text-foreground">AI Script Generation</h3>
+                <p className="font-sans-body text-muted-foreground leading-relaxed max-w-md">
+                  Answer a few questions about your work and goals. Claude writes a personalized 15–30 second script that sounds exactly like you — no generic AI voice.
+                </p>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold">AI Script Generation</h3>
-              <p className="text-center text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                Generate personalized scripts that capture your authentic voice
-              </p>
+              <div className="hidden md:block" />
             </div>
-            <div className="flex flex-col items-center space-y-3 rounded-lg border p-5 sm:p-6 shadow-sm">
-              <div className="rounded-full bg-primary/10 p-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-6 w-6 text-primary"
-                >
-                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                  <circle cx="12" cy="13" r="3" />
-                </svg>
+
+            <div className="grid grid-cols-[64px_1fr] gap-8 py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
+              <span className="font-display italic text-5xl font-semibold text-primary leading-none">02</span>
+              <div className="space-y-2">
+                <h3 className="font-display text-2xl font-semibold text-foreground">One-Take Video Recording</h3>
+                <p className="font-sans-body text-muted-foreground leading-relaxed max-w-md">
+                  Record directly in your browser with your script on screen. No equipment, no editing software, no production team needed.
+                </p>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold">Video Generation</h3>
-              <p className="text-center text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                Create professional videos with AI avatars and custom branding
-              </p>
+              <div className="hidden md:block" />
             </div>
-            <div className="flex flex-col items-center space-y-3 rounded-lg border p-5 sm:p-6 shadow-sm">
-              <div className="rounded-full bg-primary/10 p-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-6 w-6 text-primary"
-                >
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                  <path d="M16 6 12 2 8 6" />
-                  <path d="M12 2v13" />
-                </svg>
+
+            <div className="grid grid-cols-[64px_1fr] gap-8 py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
+              <span className="font-display italic text-5xl font-semibold text-primary leading-none">03</span>
+              <div className="space-y-2">
+                <h3 className="font-display text-2xl font-semibold text-foreground">Instant Sharing</h3>
+                <p className="font-sans-body text-muted-foreground leading-relaxed max-w-md">
+                  Share via QR code, link, or embed anywhere. Your video card works on LinkedIn, in email signatures, and at events.
+                </p>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold">Easy Sharing</h3>
-              <p className="text-center text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                Share your video business card with QR codes and social media integration
-              </p>
+              <div className="hidden md:block" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-primary py-10 sm:py-12 md:py-16 text-primary-foreground">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-center">
-            <div className="space-y-2 sm:space-y-3">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter md:text-4xl">Ready to stand out?</h2>
-              <p className="mx-auto max-w-[600px] text-primary-foreground/80 sm:text-lg md:text-xl">
-                Create your AI-powered video business card today and elevate your professional networking.
-              </p>
-            </div>
-            <div className="w-full sm:w-auto">
-              <Link href="/create-profile" className="block sm:inline-block">
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                  Get Started for Free
-                </Button>
-              </Link>
-            </div>
+      {/* CTA */}
+      <section className="noise-bg relative overflow-hidden bg-primary py-20 sm:py-24">
+        <div className="container relative z-10 px-4 md:px-6">
+          <div className="mx-auto max-w-2xl text-center space-y-8">
+            <h2 className="font-display italic text-4xl font-semibold text-primary-foreground sm:text-5xl leading-tight">
+              Ready to introduce yourself differently?
+            </h2>
+            <p className="font-sans-body text-lg text-primary-foreground/75 leading-relaxed">
+              Create your AI-powered video business card in minutes and elevate every professional introduction you make.
+            </p>
+            <Link href="/create-profile">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="text-base px-10 gap-2 bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+              >
+                Get Started for Free
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

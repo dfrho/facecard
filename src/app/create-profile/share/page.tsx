@@ -5,20 +5,23 @@ import { Label } from "@/components/ui/label";
 
 export default function SharePage() {
   return (
-    <div className="container max-w-4xl py-12">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Share Your Video Business Card</h1>
-          <p className="text-muted-foreground">
-            Share your video with your network and track engagement.
+    <div className="container max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
+      <div className="space-y-8">
+        <div className="space-y-3">
+          <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">Step 5 of 5</span>
+          <h1 className="font-display italic text-3xl sm:text-4xl font-semibold text-foreground">
+            Share Your Card
+          </h1>
+          <p className="font-sans-body text-muted-foreground sm:text-lg">
+            Share your video with your network and start making connections.
           </p>
         </div>
-        
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
+
+        <div className="rounded-xl border border-border bg-card p-5 sm:p-8 shadow-sm">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Your Shareable Link</h2>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-1.5">
+              <h2 className="font-display text-xl font-semibold text-foreground">Your Shareable Link</h2>
+              <p className="font-sans-body text-sm text-muted-foreground">
                 Copy and share this link with your network.
               </p>
             </div>
@@ -26,7 +29,7 @@ export default function SharePage() {
             <div className="flex gap-2">
               <Input 
                 readOnly 
-                value="https://knowme.ai/v/abcd1234" 
+                value="https://facecard.ai/v/abcd1234" 
                 className="flex-1"
               />
               <Button variant="outline">
@@ -146,7 +149,7 @@ export default function SharePage() {
                   id="embed-code"
                   className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   readOnly
-                  value={`<iframe src="https://knowme.ai/embed/abcd1234" width="400" height="225" frameborder="0" allowfullscreen></iframe>`}
+                  value={`<iframe src="https://facecard.ai/embed/abcd1234" width="400" height="225" frameborder="0" allowfullscreen></iframe>`}
                 />
               </div>
               <div className="flex justify-end mt-2">

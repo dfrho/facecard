@@ -141,11 +141,14 @@ export default function ScriptPage() {
   }
 
   return (
-    <div className="container max-w-4xl px-4 sm:px-6 py-8 sm:py-10 md:py-12">
-      <div className="space-y-6">
-        <div className="space-y-2 sm:space-y-3">
-          <h1 className="text-2xl sm:text-3xl font-bold">Your AI-Generated Script</h1>
-          <p className="text-muted-foreground sm:text-lg">
+    <div className="container max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
+      <div className="space-y-8">
+        <div className="space-y-3">
+          <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">Step 3 of 5</span>
+          <h1 className="font-display italic text-3xl sm:text-4xl font-semibold text-foreground">
+            Your Script
+          </h1>
+          <p className="font-sans-body text-muted-foreground sm:text-lg">
             Review and edit your personalized video script below.
           </p>
         </div>
@@ -214,8 +217,8 @@ export default function ScriptPage() {
               </div>
             ) : (
               <>
-                <div className="rounded-md border bg-muted/20 p-6">
-                  <blockquote className="italic whitespace-pre-line">{generatedScript}</blockquote>
+                <div className="rounded-md border-l-4 border-l-primary border border-border bg-card/60 p-6">
+                  <blockquote className="font-display italic whitespace-pre-line text-foreground leading-relaxed">{generatedScript}</blockquote>
                 </div>
 
                 <div className="space-y-4">

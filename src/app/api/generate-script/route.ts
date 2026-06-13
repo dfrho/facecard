@@ -2,7 +2,7 @@ import { ProfileFormData } from "@/types/profile";
 import { NextRequest, NextResponse } from "next/server";
 import { getToneDescription, getIndustryStyle } from "@/lib/script-utils";
 import { generateEnhancedScript } from "@/lib/script-generator";
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
 /**
  * API route handler for generating scripts
@@ -20,76 +20,52 @@ export async function POST(req: NextRequest) {
   }
 
   // Generate script
-  const script = await generateScriptWithOpenAI(profileData);
+  const script = await generateScriptWithClaude(profileData);
 
   // Return generated script
   return NextResponse.json({ script });
 }
 
 /**
- * Generate script with OpenAI
+ * Generate script with Claude
  */
-async function generateScriptWithOpenAI(
+async function generateScriptWithClaude(
   profileData: ProfileFormData
 ): Promise<string> {
-  const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 
-  // Check API key immediately after definition
-  if (!OPENAI_API_KEY) {
-    // Fall back to local generation if API key is missing
+  if (!CLAUDE_API_KEY) {
     return generateEnhancedScript(profileData);
   }
 
-  // API Key exists, proceed with OpenAI logic
   try {
-    // Create prompt for OpenAI
     const prompt = createPrompt(profileData);
 
-    // Initialize OpenAI client
-    const client = new OpenAI({
-      apiKey: OPENAI_API_KEY, // Key is definitely used here
-      baseURL: OPENAI_API_KEY.startsWith('sk-proj-') ? 'https://api.openai.com/v1' : undefined
+    const client = new Anthropic({ apiKey: CLAUDE_API_KEY });
+
+    const response = await client.messages.create({
+      model: 'claude-opus-4-8',
+      max_tokens: 1024,
+      system: "You are a professional copywriter creating video scripts. You output ONLY the spoken words — never scene directions, stage directions, or bracketed text of any kind.",
+      messages: [{ role: 'user', content: prompt }],
     });
 
-    // Call OpenAI API with documented syntax
-    const response = await client.chat.completions.create({
-      model: OPENAI_MODEL, // Model is definitely used here
-      messages: [
-        {
-          role: "system",
-          content: "You are a professional copywriter creating video scripts."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    });
+    const textBlock = response.content.find(b => b.type === 'text');
+    const raw = textBlock && textBlock.type === 'text' ? textBlock.text : '';
 
-    if (!response.choices || response.choices.length === 0) {
-      throw new Error("OpenAI returned no choices");
-    }
-
-    const result = response.choices[0].message.content || '';
+    const result = raw
+      .replace(/\[[^\]]*\]/g, '')  // strip [Scene: ...] and any bracketed directions
+      .replace(/\n{3,}/g, '\n\n')  // collapse extra blank lines left behind
+      .trim();
     return result;
 
   } catch (error) {
-    // Log the specific error from the OpenAI API call
-    console.error('Error calling OpenAI API:', error);
-    
-    // Re-throw the error to indicate failure instead of returning boilerplate
-    // You could customize the error message if needed
-    const message = error instanceof Error ? error.message : 'Unknown OpenAI API error';
-    throw new Error(`OpenAI API call failed: ${message}`);
+    console.error('Error calling Claude API:', error);
+    const message = error instanceof Error ? error.message : 'Unknown Claude API error';
+    throw new Error(`Claude API call failed: ${message}`);
   }
 }
 
-/**
- * Create a prompt for OpenAI
- */
 function createPrompt(data: ProfileFormData): string {
   const tone = getToneDescription(data.toneValue);
   const style = getIndustryStyle(data.industry || '', tone);
@@ -141,6 +117,8 @@ REQUIREMENTS:
 4. End with a clear call to action
 5. Make it sound like a real person speaking naturally
 6. NO formal marketing language or buzzwords
+7. NO scene directions, stage directions, or bracketed instructions of any kind (e.g. no "[Scene: ...]", "[Camera pans...]", "[Fade out]", etc.)
+8. Output ONLY the spoken words the person will say — nothing else
 
 SCRIPT:
 `;
