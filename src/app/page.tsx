@@ -6,19 +6,19 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="noise-bg relative overflow-hidden py-20 sm:py-28 md:py-36">
+      <section className="noise-bg relative overflow-hidden py-14 sm:py-20 md:py-28 lg:py-36">
         <div className="container relative z-10 px-4 md:px-6">
-          <div className="grid gap-16 lg:grid-cols-2 lg:gap-12 items-center">
-            <div className="flex flex-col space-y-8">
-              <div className="space-y-4">
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="flex flex-col space-y-6 sm:space-y-8">
+              <div className="space-y-3 sm:space-y-4">
                 <span className="animate-fade-up-1 inline-block font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   AI-Powered Video Business Cards
                 </span>
-                <h1 className="animate-fade-up-2 font-display italic text-5xl font-semibold leading-[1.1] tracking-tight sm:text-6xl md:text-7xl text-foreground">
+                <h1 className="animate-fade-up-2 font-display italic text-4xl font-semibold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1] md:text-6xl lg:text-7xl text-foreground">
                   Make your introduction{" "}
                   <span className="text-primary">unforgettable.</span>
                 </h1>
-                <p className="animate-fade-up-3 font-sans-body max-w-[520px] text-lg text-muted-foreground leading-relaxed">
+                <p className="animate-fade-up-3 font-sans-body max-w-[520px] text-base text-muted-foreground leading-relaxed sm:text-lg">
                   Create compelling 15–30 second video introductions that clearly communicate who you are, what you offer, and what you need.
                 </p>
               </div>
@@ -77,20 +77,20 @@ export default function Home() {
       <ResumeCard />
 
       {/* Features — numbered editorial layout */}
-      <section className="py-20 md:py-28">
+      <section className="py-14 sm:py-20 md:py-28">
         <div className="container px-4 md:px-6">
-          <div className="mb-16 space-y-3">
+          <div className="mb-10 space-y-3 sm:mb-16">
             <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">What you get</span>
-            <h2 className="font-display italic text-4xl font-semibold text-foreground sm:text-5xl">
+            <h2 className="font-display italic text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
               Everything you need<br />to stand out.
             </h2>
           </div>
 
           <div className="divide-y divide-border">
-            <div className="grid grid-cols-[64px_1fr] gap-8 py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
-              <span className="font-display italic text-5xl font-semibold text-primary leading-none">01</span>
+            <div className="grid grid-cols-[48px_1fr] gap-5 py-8 sm:grid-cols-[64px_1fr] sm:gap-8 sm:py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
+              <span className="font-display italic text-3xl font-semibold text-primary leading-none sm:text-5xl">01</span>
               <div className="space-y-2">
-                <h3 className="font-display text-2xl font-semibold text-foreground">AI Script Generation</h3>
+                <h3 className="font-display text-xl font-semibold text-foreground sm:text-2xl">AI Script Generation</h3>
                 <p className="font-sans-body text-muted-foreground leading-relaxed max-w-md">
                   Answer a few questions about your work and goals. Claude writes a personalized 15–30 second script that sounds exactly like you — no generic AI voice.
                 </p>
@@ -98,10 +98,10 @@ export default function Home() {
               <div className="hidden md:block" />
             </div>
 
-            <div className="grid grid-cols-[64px_1fr] gap-8 py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
-              <span className="font-display italic text-5xl font-semibold text-primary leading-none">02</span>
+            <div className="grid grid-cols-[48px_1fr] gap-5 py-8 sm:grid-cols-[64px_1fr] sm:gap-8 sm:py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
+              <span className="font-display italic text-3xl font-semibold text-primary leading-none sm:text-5xl">02</span>
               <div className="space-y-2">
-                <h3 className="font-display text-2xl font-semibold text-foreground">One-Take Video Recording</h3>
+                <h3 className="font-display text-xl font-semibold text-foreground sm:text-2xl">One-Take Video Recording</h3>
                 <p className="font-sans-body text-muted-foreground leading-relaxed max-w-md">
                   Record directly in your browser with your script on screen. No equipment, no editing software, no production team needed.
                 </p>
@@ -109,10 +109,10 @@ export default function Home() {
               <div className="hidden md:block" />
             </div>
 
-            <div className="grid grid-cols-[64px_1fr] gap-8 py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
-              <span className="font-display italic text-5xl font-semibold text-primary leading-none">03</span>
+            <div className="grid grid-cols-[48px_1fr] gap-5 py-8 sm:grid-cols-[64px_1fr] sm:gap-8 sm:py-12 md:grid-cols-[80px_1fr_1fr] md:gap-12">
+              <span className="font-display italic text-3xl font-semibold text-primary leading-none sm:text-5xl">03</span>
               <div className="space-y-2">
-                <h3 className="font-display text-2xl font-semibold text-foreground">Instant Sharing</h3>
+                <h3 className="font-display text-xl font-semibold text-foreground sm:text-2xl">Instant Sharing</h3>
                 <p className="font-sans-body text-muted-foreground leading-relaxed max-w-md">
                   Share via QR code, link, or embed anywhere. Your video card works on LinkedIn, in email signatures, and at events.
                 </p>
@@ -124,13 +124,13 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="noise-bg relative overflow-hidden bg-primary py-20 sm:py-24">
+      <section className="noise-bg relative overflow-hidden bg-primary py-14 sm:py-20 md:py-24">
         <div className="container relative z-10 px-4 md:px-6">
-          <div className="mx-auto max-w-2xl text-center space-y-8">
-            <h2 className="font-display italic text-4xl font-semibold text-primary-foreground sm:text-5xl leading-tight">
+          <div className="mx-auto max-w-2xl text-center space-y-6 sm:space-y-8">
+            <h2 className="font-display italic text-3xl font-semibold text-primary-foreground sm:text-4xl md:text-5xl leading-tight">
               Ready to introduce yourself differently?
             </h2>
-            <p className="font-sans-body text-lg text-primary-foreground/75 leading-relaxed">
+            <p className="font-sans-body text-base text-primary-foreground/75 leading-relaxed sm:text-lg">
               Create your AI-powered video business card in minutes and elevate every professional introduction you make.
             </p>
             <Link href="/create-profile">

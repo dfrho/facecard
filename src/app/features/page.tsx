@@ -81,15 +81,15 @@ export default function FeaturesPage() {
     <div className="flex flex-col">
 
       {/* Hero */}
-      <section className="noise-bg relative overflow-hidden py-20 sm:py-28">
-        <div className="container relative z-10 px-4 md:px-6 max-w-2xl mx-auto text-center space-y-5">
+      <section className="noise-bg relative overflow-hidden py-14 sm:py-20 md:py-28">
+        <div className="container relative z-10 px-4 md:px-6 max-w-2xl mx-auto text-center space-y-4 sm:space-y-5">
           <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
             Features
           </span>
-          <h1 className="font-display italic text-5xl font-semibold leading-tight text-foreground sm:text-6xl">
+          <h1 className="font-display italic text-4xl font-semibold leading-tight text-foreground sm:text-5xl md:text-6xl">
             Everything in one take.
           </h1>
-          <p className="font-sans-body text-lg text-muted-foreground leading-relaxed">
+          <p className="font-sans-body text-base text-muted-foreground leading-relaxed sm:text-lg">
             From AI-written script to shareable video card — the entire workflow lives in FaceCard.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -109,13 +109,13 @@ export default function FeaturesPage() {
       </section>
 
       {/* Feature rows */}
-      <section className="container px-4 md:px-6 py-16 md:py-24">
+      <section className="container px-4 md:px-6 py-10 sm:py-16 md:py-24">
         <div className="mx-auto max-w-4xl divide-y divide-border">
           {features.map(f => (
-            <div key={f.num} className="grid grid-cols-[64px_1fr] gap-8 py-14 md:grid-cols-[80px_1fr_1fr] md:gap-16">
+            <div key={f.num} className="grid grid-cols-[48px_1fr] gap-5 py-9 sm:grid-cols-[64px_1fr] sm:gap-8 sm:py-14 md:grid-cols-[80px_1fr_1fr] md:gap-16">
 
               {/* Number */}
-              <span className="font-display italic text-5xl font-semibold text-primary leading-none">
+              <span className="font-display italic text-3xl font-semibold text-primary leading-none sm:text-5xl">
                 {f.num}
               </span>
 
@@ -151,13 +151,13 @@ export default function FeaturesPage() {
       </section>
 
       {/* CTA */}
-      <section className="noise-bg relative overflow-hidden bg-primary py-20 sm:py-24">
+      <section className="noise-bg relative overflow-hidden bg-primary py-14 sm:py-20 md:py-24">
         <div className="container relative z-10 px-4 md:px-6">
-          <div className="mx-auto max-w-2xl text-center space-y-8">
-            <h2 className="font-display italic text-4xl font-semibold text-primary-foreground sm:text-5xl leading-tight">
+          <div className="mx-auto max-w-2xl text-center space-y-6 sm:space-y-8">
+            <h2 className="font-display italic text-3xl font-semibold text-primary-foreground sm:text-4xl md:text-5xl leading-tight">
               Ready to make your introduction unforgettable?
             </h2>
-            <p className="font-sans-body text-lg text-primary-foreground/75 leading-relaxed">
+            <p className="font-sans-body text-base text-primary-foreground/75 leading-relaxed sm:text-lg">
               Create your first video business card for free. No credit card required.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

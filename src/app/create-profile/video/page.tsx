@@ -238,7 +238,7 @@ function VideoPageContent() {
         {/* Left Column: Script Display */}
         <div className="space-y-4">
           <h2 className="font-display text-xl font-semibold text-foreground">Your Script</h2>
-          <Card className="bg-muted/40 h-[400px] overflow-y-auto"> {/* Fixed height and scroll */} 
+          <Card className="bg-muted/40 h-[240px] overflow-y-auto sm:h-[400px]"> {/* Fixed height and scroll */}
             <CardContent className="pt-6">
               {scriptContent ? (
                 <p className="whitespace-pre-wrap">{scriptContent}</p>

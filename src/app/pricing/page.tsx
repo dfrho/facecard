@@ -39,22 +39,22 @@ export default function PricingPage() {
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <section className="noise-bg relative overflow-hidden py-20 sm:py-28">
-        <div className="container relative z-10 px-4 md:px-6 text-center space-y-5 max-w-2xl mx-auto">
+      <section className="noise-bg relative overflow-hidden py-14 sm:py-20 md:py-28">
+        <div className="container relative z-10 px-4 md:px-6 text-center space-y-4 sm:space-y-5 max-w-2xl mx-auto">
           <span className="font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
             Pricing
           </span>
-          <h1 className="font-display italic text-5xl font-semibold leading-tight text-foreground sm:text-6xl">
+          <h1 className="font-display italic text-4xl font-semibold leading-tight text-foreground sm:text-5xl md:text-6xl">
             Simple, honest pricing.
           </h1>
-          <p className="font-sans-body text-lg text-muted-foreground leading-relaxed">
+          <p className="font-sans-body text-base text-muted-foreground leading-relaxed sm:text-lg">
             Start free. Upgrade when you need more cards, more takes, and more ways to share.
           </p>
         </div>
       </section>
 
       {/* Cards */}
-      <section className="container px-4 md:px-6 pb-24">
+      <section className="container px-4 md:px-6 pb-14 sm:pb-24">
         <div className="mx-auto max-w-4xl grid gap-6 md:grid-cols-2 md:gap-8">
 
           {/* Free */}

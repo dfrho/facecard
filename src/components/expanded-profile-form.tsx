@@ -389,10 +389,10 @@ export function ExpandedProfileForm() {
               onChange={(e) => setToneValue(parseInt(e.target.value))}
               className="w-full"
             />
-            <div className="flex flex-wrap justify-between text-xs sm:text-sm">
-              <span className="mr-1">Friendly & Casual 😎</span>
-              <span className="mx-1 text-center">Professional but Approachable 📢</span>
-              <span className="ml-1">Straight to Business 💼</span>
+            <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between sm:gap-0 sm:text-sm">
+              <span>Friendly & Casual 😎</span>
+              <span className="sm:text-center">Professional but Approachable 📢</span>
+              <span className="sm:text-right">Straight to Business 💼</span>
             </div>
           </div>
         </div>

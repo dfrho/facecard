@@ -18,6 +18,7 @@ export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const isOnFlow = pathname.startsWith('/create-profile');
+  const hideGetStarted = isOnFlow || (pathname === '/' && !session);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -86,7 +87,7 @@ export function Header() {
             </DropdownMenu>
           )}
 
-          {!isOnFlow && (
+          {!hideGetStarted && (
             <Link href="/create-profile">
               <Button size="sm" className="font-sans-body gap-1.5">
                 Get Started
@@ -147,7 +148,7 @@ export function Header() {
                     <DropdownMenuItem onClick={handleLinkedInLogin}>Sign in with LinkedIn</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                {!isOnFlow && (
+                {!hideGetStarted && (
                   <Link href="/create-profile" className="block">
                     <Button size="sm" className="w-full font-sans-body">Get Started</Button>
                   </Link>
