@@ -114,6 +114,27 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
+## Testing
+
+| Command | What it runs |
+| --- | --- |
+| `npm test` | Vitest unit tests for `src/lib` and the script API (`src/**/*.test.ts`) |
+| `npm run test:watch` | The unit tests in watch mode |
+| `npm run test:e2e` | Playwright end-to-end tests (`e2e/app`) against a local server on port 3100 |
+| `npm run test:live` | Sign-in checks against the deployed site (`e2e/live`); set `LIVE_URL` to check another deployment |
+
+Before the first end-to-end run, install the browser:
+
+```bash
+npx playwright install chromium
+```
+
+The end-to-end tests start their own server with fake OAuth credentials and Claude switched off, so they never use the keys in `.env.local`. Signed-in tests use a test session cookie instead of a real Google or LinkedIn login.
+
+GitHub Actions runs lint, unit tests and end-to-end tests on every push to `main` and every pull request (`.github/workflows/ci.yml`). The live sign-in check (`.github/workflows/live-check.yml`) runs after each successful Vercel production deploy, or by hand from the Actions tab.
+
+---
+
 ## Pricing
 
 | Plan | Price | Cards | Script generations | Recordings |
