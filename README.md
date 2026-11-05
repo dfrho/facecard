@@ -135,6 +135,91 @@ GitHub Actions runs lint, unit tests and end-to-end tests on every push to `main
 
 ---
 
+## Rate Limiting (Vercel Firewall)
+
+Every script generation is a paid Claude call, so `/api/generate-script` is limited in two places:
+
+- **In the app:** signed-in users only, at most 20 generations per user per hour (`src/app/api/generate-script/route.ts`). This count is kept per server instance, so it's not a strict global limit.
+- **At Vercel's edge:** a Firewall rule configured in the Vercel project (not in this repository):
+
+| Setting | Value |
+| --- | --- |
+| Name | `Rate limit script generation` |
+| Rule ID | `rule_rate_limit_script_generation_3M3CNo` |
+| Matches | `POST` requests where the path equals `/api/generate-script` |
+| Limit | 60 requests per IP address per hour (fixed window, counted per Vercel region) |
+| When exceeded | `429 Too Many Requests`, returned before the function runs (blocked requests aren't billed) |
+
+Traffic for the rule: https://vercel.com/david-rhodes-projects/facecard/firewall/traffic?filter=rule_rate_limit_script_generation_3M3CNo
+
+### Managing the rule
+
+The commands below use the latest Vercel CLI through `npx`. Link the folder to the project once first (this creates a git-ignored `.vercel/` folder):
+
+```bash
+npx vercel@latest link --scope david-rhodes-projects --project facecard
+```
+
+Show the live rule:
+
+```bash
+npx vercel@latest firewall rules list --expand
+```
+
+Changes are staged as drafts and only take effect when published. `publish` shows what will change and asks you to confirm; to approve without the prompt, add `--confirm-name facecard`.
+
+**Undo (turn the rule off but keep it):**
+
+```bash
+npx vercel@latest firewall rules disable "Rate limit script generation"
+```
+
+```bash
+npx vercel@latest firewall publish
+```
+
+**Turn it back on:**
+
+```bash
+npx vercel@latest firewall rules enable "Rate limit script generation"
+```
+
+```bash
+npx vercel@latest firewall publish
+```
+
+**Remove it completely:**
+
+```bash
+npx vercel@latest firewall rules remove "Rate limit script generation" --yes
+```
+
+```bash
+npx vercel@latest firewall publish
+```
+
+**Re-create it** (for example after removing it, or in a new Vercel project):
+
+```bash
+npx vercel@latest firewall rules add "Rate limit script generation" \
+  --condition '{"type":"path","op":"eq","value":"/api/generate-script"}' \
+  --condition '{"type":"method","op":"eq","value":"POST"}' \
+  --action rate_limit \
+  --rate-limit-window 3600 \
+  --rate-limit-requests 60 \
+  --rate-limit-keys ip \
+  --rate-limit-action rate_limit \
+  --yes
+```
+
+```bash
+npx vercel@latest firewall publish
+```
+
+To see staged changes before publishing, run `npx vercel@latest firewall diff`; to throw them away, `npx vercel@latest firewall discard --yes`. A re-created rule gets a new rule ID, so update the table and traffic link above.
+
+---
+
 ## Pricing
 
 | Plan | Price | Cards | Script generations | Recordings |

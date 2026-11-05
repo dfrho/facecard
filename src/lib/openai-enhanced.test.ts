@@ -36,6 +36,18 @@ describe('generateScript', () => {
     );
   });
 
+  it("uses the API's own message when it explains the failure", async () => {
+    mockFetch({
+      ok: false,
+      status: 429,
+      text: JSON.stringify({ error: 'Please try again in 12 minutes.' }),
+    });
+
+    await expect(generateScript(makeProfile())).rejects.toThrow(
+      'Failed to generate script: Please try again in 12 minutes.'
+    );
+  });
+
   it('wraps network errors', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Network down')));
 

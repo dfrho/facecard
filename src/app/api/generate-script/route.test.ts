@@ -19,19 +19,94 @@ vi.mock('@anthropic-ai/sdk', () => ({
   },
 }));
 
-function postProfile(profile: ProfileFormData) {
+const auth = vi.hoisted(() => ({ getServerSession: vi.fn(), userCount: 0 }));
+vi.mock('next-auth', () => ({ getServerSession: auth.getServerSession }));
+
+function post(body: string, headers: Record<string, string> = {}) {
   return POST(
     new NextRequest('http://localhost/api/generate-script', {
       method: 'POST',
-      body: JSON.stringify(profile),
-      headers: { 'Content-Type': 'application/json' },
+      body,
+      headers: { 'Content-Type': 'application/json', ...headers },
     })
   );
+}
+
+function postProfile(profile: ProfileFormData | Record<string, unknown>) {
+  return post(JSON.stringify(profile));
 }
 
 beforeEach(() => {
   anthropic.create.mockReset();
   anthropic.clientOptions.length = 0;
+  // A fresh user per test, so the per-user rate limit never carries over between tests.
+  auth.userCount += 1;
+  auth.getServerSession.mockResolvedValue({
+    user: { id: `user-${auth.userCount}`, name: 'Ada Lovelace', email: 'ada@example.com' },
+  });
+});
+
+describe('POST /api/generate-script access and limits', () => {
+  it('rejects signed-out requests without calling Claude', async () => {
+    vi.stubEnv('CLAUDE_API_KEY', 'test-key');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    auth.getServerSession.mockResolvedValue(null);
+
+    const response = await postProfile(makeFullProfile());
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: 'Please sign in to generate a script.' });
+    expect(anthropic.create).not.toHaveBeenCalled();
+    expect(JSON.parse(warn.mock.calls[0][0])).toMatchObject({
+      event: 'script_generation_rejected',
+      reason: 'unauthenticated',
+    });
+  });
+
+  it('rejects fields over the length limit', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const response = await postProfile(makeFullProfile({ funFact: 'x'.repeat(1001) }));
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('"funFact" is too long (maximum 1000 characters).');
+    expect(anthropic.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed and non-object bodies', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    expect((await post('{not json')).status).toBe(400);
+    expect((await post('"just a string"')).status).toBe(400);
+    expect((await post('[1, 2, 3]')).status).toBe(400);
+  });
+
+  it('rejects bodies declared larger than 100 KB before parsing them', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const response = await post(JSON.stringify(makeFullProfile()), { 'Content-Length': '200000' });
+
+    expect(response.status).toBe(413);
+  });
+
+  it('limits each user to 20 generations an hour', async () => {
+    vi.stubEnv('CLAUDE_API_KEY', '');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    for (let i = 0; i < 20; i++) {
+      expect((await postProfile(makeFullProfile())).status).toBe(200);
+    }
+    const limited = await postProfile(makeFullProfile());
+
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get('Retry-After'))).toBeGreaterThan(0);
+    expect((await limited.json()).error).toMatch(/try again in \d+ minutes?/);
+    expect(JSON.parse(warn.mock.calls[0][0])).toMatchObject({ reason: 'rate_limited' });
+
+    // Another user is unaffected.
+    auth.getServerSession.mockResolvedValue({ user: { id: 'someone-else' } });
+    expect((await postProfile(makeFullProfile())).status).toBe(200);
+  });
 });
 
 describe('POST /api/generate-script', () => {

@@ -39,7 +39,8 @@ export default function ScriptPage() {
       setScriptVersions(prev => [version, ...prev]);
     } catch (error) {
       console.error('Error generating script:', error);
-      setError('Failed to generate script. Please try again.');
+      // generateScript's message includes the API's explanation (sign-in, limits, invalid input).
+      setError(error instanceof Error ? error.message : 'Failed to generate script. Please try again.');
     } finally {
       setIsGenerating(false);
       setIsLoading(false);

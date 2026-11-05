@@ -1,28 +1,71 @@
 import { ProfileFormData } from "@/types/profile";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { getToneDescription, getIndustryStyle } from "@/lib/script-utils";
 import { generateEnhancedScript } from "@/lib/script-generator";
+import { authOptions } from "@/lib/auth";
+import { validateScriptRequest } from "@/lib/profile-validation";
+import { createRateLimiter } from "@/lib/rate-limit";
 import Anthropic from "@anthropic-ai/sdk";
 
+// A real profile is a few KB; anything far larger is not a legitimate request.
+const MAX_BODY_BYTES = 100_000;
+
+// Every generation is a paid Claude call. 20 an hour per user allows plenty of
+// regenerating while editing, but not bulk use. See src/lib/rate-limit.ts for its limits.
+const generationLimiter = createRateLimiter({ limit: 20, windowMs: 60 * 60 * 1000 });
+
+function reject(
+  reason: string,
+  status: number,
+  message: string,
+  details: Record<string, unknown> = {},
+  headers: Record<string, string> = {}
+) {
+  console.warn(JSON.stringify({ event: "script_generation_rejected", reason, ...details }));
+  return NextResponse.json({ error: message }, { status, headers });
+}
+
 /**
- * API route handler for generating scripts
+ * API route handler for generating scripts. Signed-in users only: each request spends
+ * Claude credits, so it is also size-checked and rate-limited per user.
  */
 export async function POST(req: NextRequest) {
-  // Get profile data from request body
-  const profileData: ProfileFormData = await req.json();
+  const session = await getServerSession(authOptions);
+  const user = session?.user as { id?: string; email?: string | null } | undefined;
+  const userId = user?.id || user?.email;
+  if (!userId) {
+    const ip = req.ip ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    return reject("unauthenticated", 401, "Please sign in to generate a script.", { ip });
+  }
 
-  // Validate request
-  if (!profileData) {
-    return NextResponse.json(
-      { error: "Profile data is required" },
-      { status: 400 }
+  const declaredBytes = Number(req.headers.get("content-length") ?? 0);
+  if (declaredBytes > MAX_BODY_BYTES) {
+    return reject("too_large", 413, "That profile is too large to turn into a script.", {
+      userId,
+      bytes: declaredBytes,
+    });
+  }
+
+  const body = await req.json().catch(() => undefined);
+  const validation = validateScriptRequest(body);
+  if (!validation.ok) {
+    return reject("invalid", 400, validation.error, { userId });
+  }
+
+  const limit = generationLimiter.check(userId);
+  if (!limit.allowed) {
+    const minutes = Math.ceil(limit.retryAfterSeconds / 60);
+    return reject(
+      "rate_limited",
+      429,
+      `You've generated a lot of scripts in the last hour. Please try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
+      { userId },
+      { "Retry-After": String(limit.retryAfterSeconds) }
     );
   }
 
-  // Generate script
-  const script = await generateScriptWithClaude(profileData);
-
-  // Return generated script
+  const script = await generateScriptWithClaude(validation.profile);
   return NextResponse.json({ script });
 }
 
