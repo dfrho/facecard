@@ -1,0 +1,31 @@
+name: Live sign-in check
+
+# Runs after each successful Vercel production deployment (when the Vercel project is
+# connected to this GitHub repo), or by hand from the Actions tab.
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Site to check (defaults to the production URL)
+        required: false
+
+jobs:
+  live:
+    name: Check sign-in on the live site
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment_status.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LIVE_URL: ${{ inputs.url || vars.LIVE_URL || 'https://facecard-david-rhodes-projects.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:live
