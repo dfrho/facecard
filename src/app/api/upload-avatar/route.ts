@@ -1,44 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { authOptions } from '@/lib/auth';
+import { MAX_AVATAR_BYTES, avatarExtension } from '@/lib/avatar-url';
+import { AvatarStorageNotConfiguredError, storeAvatar } from '@/lib/avatars';
+
+function errorResponse(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
+}
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return errorResponse('Please sign in to upload a photo.', 401);
+  }
+
+  const formData = await req.formData().catch(() => null);
+  if (!formData) {
+    return errorResponse('Expected a photo upload.', 400);
+  }
+
+  const file = formData.get('avatar');
+  if (!(file instanceof Blob)) {
+    return errorResponse('No file uploaded.', 400);
+  }
+  if (!avatarExtension(file.type)) {
+    return errorResponse('Please upload a JPEG, PNG, WebP or GIF image.', 400);
+  }
+  if (file.size > MAX_AVATAR_BYTES) {
+    return errorResponse('Photos must be 5 MB or smaller.', 413);
+  }
+
   try {
-    const session = await getServerSession();
-
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const formData = await req.formData();
-    const file = formData.get('avatar') as File | null;
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded.' }, { status: 400 });
-    }
-
-    // Optional: Validate file type and size here
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${uuidv4()}-${file.name}`; // Create a unique filename
-    const filepath = join(process.cwd(), 'public/uploads', filename);
-
-    try {
-      // Ensure the uploads directory exists
-      await mkdir(join(process.cwd(), 'public/uploads'), { recursive: true });
-
-      // Write the file to the server
-      await writeFile(filepath, buffer);
-
-      const publicUrl = `/uploads/${filename}`; // URL accessible by the client
-
-      return NextResponse.json({ message: 'Avatar uploaded successfully!', url: publicUrl });
-    } catch (error) {
-      return NextResponse.json({ error: 'Failed to upload avatar.' }, { status: 500 });
-    }
+    const url = await storeAvatar(file);
+    return NextResponse.json({ url });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error storing avatar:', error);
+    if (error instanceof AvatarStorageNotConfiguredError) {
+      return errorResponse('Photo uploads are not set up yet. Please try again later.', 500);
+    }
+    return errorResponse('Failed to upload photo. Please try again.', 500);
   }
 }

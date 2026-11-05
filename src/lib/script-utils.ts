@@ -16,24 +16,34 @@ export function getToneDescription(toneValue: number): string {
 /**
  * Get writing style based on industry and tone
  */
+// Short keywords must match whole words, so "AI" doesn't match "Retail" or "Training"
+// and "care" doesn't match "Career". Longer stems may match inside words ("Fintech", "Healthcare").
+const TECH_KEYWORDS = [/tech/, /software/, /\bai\b/, /\bsaas\b/];
+const FINANCE_KEYWORDS = [/financ/, /bank/, /invest/];
+const HEALTH_KEYWORDS = [/health/, /medic/, /\bcare\b/];
+
+function matchesAny(text: string, keywords: RegExp[]): boolean {
+  return keywords.some(keyword => keyword.test(text));
+}
+
 export function getIndustryStyle(industry: string, tone: string): string {
   // Normalize the industry name
   const normalizedIndustry = industry.toLowerCase();
-  
+
   // Map industries to specific writing styles
-  if (normalizedIndustry.includes('tech') || normalizedIndustry.includes('software') || normalizedIndustry.includes('ai')) {
-    return tone === 'friendly and casual' 
+  if (matchesAny(normalizedIndustry, TECH_KEYWORDS)) {
+    return tone === 'friendly and casual'
       ? 'innovative and forward-thinking with a touch of technical expertise'
       : 'technical yet accessible, focusing on innovation and solutions';
   }
-  
-  if (normalizedIndustry.includes('finance') || normalizedIndustry.includes('banking') || normalizedIndustry.includes('investment')) {
+
+  if (matchesAny(normalizedIndustry, FINANCE_KEYWORDS)) {
     return tone === 'friendly and casual'
       ? 'trustworthy and knowledgeable about financial matters, with an approachable style'
       : 'authoritative and precise, emphasizing expertise and reliability';
   }
-  
-  if (normalizedIndustry.includes('health') || normalizedIndustry.includes('medical') || normalizedIndustry.includes('care')) {
+
+  if (matchesAny(normalizedIndustry, HEALTH_KEYWORDS)) {
     return tone === 'friendly and casual'
       ? 'empathetic and reassuring, with a personal touch'
       : 'professional and credible, with a caring undertone';

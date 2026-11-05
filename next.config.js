@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // @vercel/blob ships an undici build that Next 14.0's bundler can't parse, so load it
+    // from node_modules at runtime instead of bundling it into the server code.
+    serverComponentsExternalPackages: ['@vercel/blob'],
+  },
   images: {
     // domains: ['localhost'], // Deprecated: Move to remotePatterns
     remotePatterns: [
@@ -21,6 +26,12 @@ const nextConfig = {
         hostname: 'media.licdn.com', // Add LinkedIn media domain
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com', // Uploaded profile photos (Vercel Blob)
+        port: '',
+        pathname: '/avatars/**',
       },
       {
         protocol: 'http', // Add localhost for local development

@@ -29,7 +29,7 @@ export default function ProfilePage() {
     }
 
     const formData = new FormData();
-    formData.append('file', selectedImage);
+    formData.append('avatar', selectedImage);
 
     try {
       const response = await fetch('/api/upload-avatar', {
@@ -39,12 +39,12 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const data = await response.json();
-        setAvatarUrl(data.avatarUrl);
+        setAvatarUrl(data.url);
         await update({
           ...session,
           user: {
             ...session?.user,
-            image: data.avatarUrl,
+            image: data.url,
           },
         });
         setIsSaved(true);

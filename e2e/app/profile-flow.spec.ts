@@ -1,5 +1,21 @@
-import { expect, test } from '@playwright/test';
+import { rm } from 'fs/promises';
+import { join } from 'path';
+import { expect, Page, test } from '@playwright/test';
 import { signIn, TEST_USER } from '../support/session';
+
+// A valid 1x1 PNG.
+const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+  'base64'
+);
+
+async function fillStepOne(page: Page, jobTitle: string) {
+  await page.getByLabel('First Name *', { exact: true }).fill('Ada');
+  await page.getByLabel('Last Name *', { exact: true }).fill('Lovelace');
+  await page.getByLabel('Job Title *', { exact: true }).fill(jobTitle);
+  await page.getByLabel('Company / Organization', { exact: true }).fill('Analytical Engines');
+  await page.getByLabel('Email *', { exact: true }).fill(TEST_USER.email);
+}
 
 test.beforeEach(async ({ context }) => {
   await signIn(context);
@@ -26,11 +42,7 @@ test('profile, interests and script steps produce a script', async ({ page }) =>
   await page.goto('/create-profile');
 
   // Step 1: profile
-  await page.getByLabel('First Name *', { exact: true }).fill('Ada');
-  await page.getByLabel('Last Name *', { exact: true }).fill('Lovelace');
-  await page.getByLabel('Job Title *', { exact: true }).fill('Engineer');
-  await page.getByLabel('Company / Organization', { exact: true }).fill('Analytical Engines');
-  await page.getByLabel('Email *', { exact: true }).fill(TEST_USER.email);
+  await fillStepOne(page, 'Engineer');
   await page.getByRole('button', { name: 'Next: Interests & Skills' }).click();
 
   // Step 2: interests
@@ -46,4 +58,60 @@ test('profile, interests and script steps produce a script', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'Your Script' })).toBeVisible();
   await expect(page.locator('blockquote')).toContainText('Ada Lovelace');
   await expect(page.locator('blockquote')).toContainText('Engineer at Analytical Engines');
+});
+
+test('changes made after going back to step 1 are kept', async ({ page }) => {
+  await page.goto('/create-profile');
+  await fillStepOne(page, 'Engineer');
+  await page.getByRole('button', { name: 'Next: Interests & Skills' }).click();
+  await expect(page).toHaveURL('/create-profile/interests');
+
+  await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page).toHaveURL('/create-profile');
+  const jobTitle = page.getByLabel('Job Title *', { exact: true });
+  await expect(jobTitle).toHaveValue('Engineer');
+  await jobTitle.fill('CTO');
+  await page.getByRole('button', { name: 'Next: Interests & Skills' }).click();
+
+  await expect(page).toHaveURL('/create-profile/interests');
+  await page.getByRole('button', { name: 'Generate Script' }).click();
+  await expect(page.locator('blockquote')).toContainText('CTO at Analytical Engines');
+  await expect(page.locator('blockquote')).not.toContainText('Engineer');
+});
+
+test('a profile photo can be uploaded and becomes the header avatar', async ({ page }) => {
+  await page.goto('/create-profile');
+  await page.getByLabel('Upload Profile Photo').setInputFiles({
+    name: 'me.png',
+    mimeType: 'image/png',
+    buffer: TINY_PNG,
+  });
+
+  const uploadResponse = page.waitForResponse('**/api/upload-avatar');
+  await page.getByRole('button', { name: 'Upload Photo' }).click();
+  const response = await uploadResponse;
+
+  expect(response.status()).toBe(200);
+  const { url } = await response.json();
+  try {
+    expect(url).toMatch(/^\/uploads\/[a-f0-9-]+\.png$/);
+    await expect(page.getByText('Avatar uploaded successfully!')).toBeVisible();
+    await expect(page.locator('header').getByRole('img', { name: 'User Avatar' })).toHaveAttribute(
+      'src',
+      new RegExp(encodeURIComponent(url))
+    );
+  } finally {
+    await rm(join(process.cwd(), 'public', url), { force: true });
+  }
+});
+
+test('photo upload rejects files that are not images', async ({ page }) => {
+  const response = await page.request.post('/api/upload-avatar', {
+    multipart: {
+      avatar: { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') },
+    },
+  });
+
+  expect(response.status()).toBe(400);
+  expect((await response.json()).error).toBe('Please upload a JPEG, PNG, WebP or GIF image.');
 });

@@ -9,6 +9,6 @@ export default defineConfig({
   retries: 1,
   reporter: process.env.CI ? [['github'], ['list']] : [['list']],
   use: {
-    baseURL: process.env.LIVE_URL || 'https://facecard-david-rhodes-projects.vercel.app',
+    baseURL: process.env.LIVE_URL || 'https://facecard-amber.vercel.app',
   },
 });
