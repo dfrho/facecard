@@ -41,6 +41,20 @@ describe('getIndustryStyle', () => {
     expect(getIndustryStyle('Medical Devices', professional)).toContain('caring undertone');
   });
 
+  it('treats "financial" as finance and "care" as health', () => {
+    expect(getIndustryStyle('Financial Services', professional)).toContain('authoritative and precise');
+    expect(getIndustryStyle('Home care', casual)).toContain('empathetic and reassuring');
+  });
+
+  it.each(['Retail', 'Corporate Training', 'Career Coaching', 'Hospitality'])(
+    'does not misread "%s" as tech or health',
+    industry => {
+      expect(getIndustryStyle(industry, professional)).toBe(
+        'professional and articulate, emphasizing expertise'
+      );
+    }
+  );
+
   it('falls back to a tone-based default for other industries', () => {
     expect(getIndustryStyle('Real Estate', casual)).toBe(
       'authentic and conversational, highlighting personal strengths'

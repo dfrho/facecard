@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function CreateProfilePage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,8 +16,10 @@ export default function CreateProfilePage() {
     }
   }, [status, router]);
 
-  // Show loading state while session is being checked
-  if (status === 'loading') {
+  // Show a loading state only until the first session check finishes. The session also
+  // reports "loading" while it refreshes (for example after a photo upload), and
+  // unmounting the form then would throw away what the user has typed.
+  if (status === 'loading' && !session) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <p className="font-sans-body text-muted-foreground">Loading...</p>
@@ -25,7 +27,7 @@ export default function CreateProfilePage() {
     );
   }
 
-  if (status === 'authenticated') {
+  if (session) {
     return (
       <div className="container max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
         <div className="space-y-8">

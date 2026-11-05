@@ -93,11 +93,11 @@ export function ExpandedProfileForm() {
     }
 
     const formData = new FormData();
-    formData.append('file', selectedImage);
+    formData.append('avatar', selectedImage);
 
     try {
       setError("Uploading photo...");
-      
+
       const response = await fetch('/api/upload-avatar', {
         method: 'POST',
         body: formData,
@@ -105,7 +105,7 @@ export function ExpandedProfileForm() {
 
       if (response.ok) {
         const data = await response.json();
-        const fullAvatarUrl = data.avatarUrl;
+        const fullAvatarUrl: string = data.url;
         setAvatarUrl(fullAvatarUrl);
         
         // Update session if available
@@ -135,42 +135,43 @@ export function ExpandedProfileForm() {
           setError(null);
         }, 3000);
       } else {
-        alert(`Upload failed: ${await response.text()}`);
+        const body = await response.json().catch(() => null);
+        setError(body?.error || 'Photo upload failed. Please try again.');
       }
     } catch (error) {
-      alert('An error occurred during upload.');
+      setError('Photo upload failed. Please check your connection and try again.');
     }
   };
 
+  // Saved data goes first so fields from later steps are kept, and the values
+  // currently in the form win over what was saved before.
+  const buildFormData = (): ProfileFormData => ({
+    ...(formData || {}),
+    firstName,
+    lastName,
+    jobTitle,
+    company,
+    email,
+    toneValue,
+    introduction,
+    superpower,
+    otherSuperpower,
+    funFact,
+    industry,
+    mainValue,
+    secondaryValue,
+    audience,
+    otherAudience,
+    primaryAsk,
+    secondaryAsk,
+    contactMethod,
+    photoUrl: avatarUrl || undefined,
+  });
+
   const handleSaveDraft = () => {
     try {
-      // Create updated form data object
-      const updatedFormData: ProfileFormData = {
-        firstName,
-        lastName,
-        jobTitle,
-        company,
-        email,
-        toneValue,
-        introduction,
-        superpower,
-        otherSuperpower,
-        funFact,
-        industry,
-        mainValue,
-        secondaryValue,
-        audience,
-        otherAudience,
-        primaryAsk,
-        secondaryAsk,
-        contactMethod,
-        photoUrl: avatarUrl || undefined,
-        // Maintain any existing fields that aren't being updated
-        ...(formData || {})
-      };
-
       // Save to storage
-      saveFormData(updatedFormData);
+      saveFormData(buildFormData());
       
       // Show success message
       setError("Draft saved successfully!");
@@ -197,33 +198,8 @@ export function ExpandedProfileForm() {
         return;
       }
 
-      // Create updated form data object
-      const updatedFormData: ProfileFormData = {
-        firstName,
-        lastName,
-        jobTitle,
-        company,
-        email,
-        toneValue,
-        introduction,
-        superpower,
-        otherSuperpower,
-        funFact,
-        industry,
-        mainValue,
-        secondaryValue,
-        audience,
-        otherAudience,
-        primaryAsk,
-        secondaryAsk,
-        contactMethod,
-        photoUrl: avatarUrl || undefined,
-        // Maintain any existing fields that aren't being updated
-        ...(formData || {})
-      };
-
       // Save to storage and mark step as completed
-      saveFormData(updatedFormData, 'basic');
+      saveFormData(buildFormData(), 'basic');
       saveCurrentStep('basic');
 
       // Navigate to next step
