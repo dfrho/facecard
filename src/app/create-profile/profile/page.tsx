@@ -4,6 +4,8 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
@@ -58,51 +60,65 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Profile</h1>
+    <div className="container max-w-2xl px-4 sm:px-6 py-10 sm:py-14">
+      <h1 className="font-display italic text-3xl sm:text-4xl font-semibold text-foreground mb-8">
+        Profile
+      </h1>
       {session && session.user && (
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
+          {/* shrink-0 keeps the photo round when a long name or email needs the space */}
           {(avatarUrl || session.user?.image) && (() => {
             const imageSrc = avatarUrl || session.user!.image!;
             return (
               <Image
                 src={imageSrc}
                 alt="User Avatar"
-                width={100}
-                height={100}
-                className="rounded-full"
+                width={96}
+                height={96}
+                className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-full object-cover"
               />
             );
           })()}
           {!(avatarUrl || session.user?.image) && (
-            <div className="w-[100px] h-[100px] rounded-full bg-gray-300 flex items-center justify-center">
-              <span className="text-gray-500">No Image</span>
+            <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-full bg-muted flex items-center justify-center">
+              <span className="font-sans-body text-xs text-muted-foreground">No photo</span>
             </div>
           )}
-          <div>
-            <h2 className="text-lg font-semibold">{session.user.name}</h2>
-            <p className="text-gray-600">{session.user.email}</p>
+          <div className="min-w-0">
+            <h2 className="font-display text-xl font-semibold text-foreground break-words">
+              {session.user.name}
+            </h2>
+            <p className="font-sans-body text-sm text-muted-foreground break-all">{session.user.email}</p>
           </div>
         </div>
       )}
       {!isSaved && (
-        <div className="mt-4">
-          <input type="file" onChange={handleImageChange} />
+        <div className="mt-8 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="profile-photo">Upload a new photo</Label>
+            <Input
+              id="profile-photo"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full"
+            />
+          </div>
           {selectedImage && (
-            <div className="mt-2">
-              <p>Selected Image:</p>
+            <div className="space-y-2">
+              <p className="font-sans-body text-sm text-muted-foreground">Selected photo:</p>
               <Image
                 src={URL.createObjectURL(selectedImage)}
                 alt="Selected Image"
-                width={100}
-                height={100}
-                className="rounded-full"
+                width={96}
+                height={96}
+                className="h-24 w-24 rounded-full object-cover"
               />
             </div>
           )}
-          <div className="mt-4">
-            <Button onClick={handleSave}>Save</Button>
-          </div>
+          <Button onClick={handleSave} disabled={!selectedImage} className="w-full sm:w-auto">
+            Save
+          </Button>
         </div>
       )}
     </div>
