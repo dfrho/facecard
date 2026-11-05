@@ -177,14 +177,16 @@ export default function InterestsPage() {
                 </div>
               </div>
               
-              <div className="flex justify-between">
-                <Link href="/create-profile">
-                  <Button type="button" variant="outline">Back</Button>
+              {/* On phones the buttons stack full-width, primary action on top; side by side from sm up. */}
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Link href="/create-profile" className="w-full sm:w-auto">
+                  <Button type="button" variant="outline" className="w-full sm:w-auto">Back</Button>
                 </Link>
-                <div className="space-x-2">
-                  <Button 
-                    type="button" 
+                <div className="flex flex-col-reverse gap-3 sm:flex-row">
+                  <Button
+                    type="button"
                     variant="outline"
+                    className="w-full sm:w-auto"
                     onClick={() => {
                       if (formData) {
                         // Save as draft without proceeding
@@ -201,10 +203,11 @@ export default function InterestsPage() {
                   >
                     Save Draft
                   </Button>
-                  <Button 
+                  <Button
                     type="button"
                     onClick={handleGenerateScript}
                     disabled={isSubmitting}
+                    className="w-full sm:w-auto"
                   >
                     {isSubmitting ? "Saving..." : "Generate Script"}
                   </Button>

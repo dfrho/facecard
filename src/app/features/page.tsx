@@ -135,8 +135,9 @@ export default function FeaturesPage() {
                 </p>
               </div>
 
-              {/* Right: detail bullets */}
-              <ul className="space-y-3 md:pt-1">
+              {/* Right: detail bullets. Below md the grid has only two columns, so keep the
+                  list in the text column instead of letting it wrap under the number. */}
+              <ul className="col-start-2 space-y-3 md:col-start-auto md:pt-1">
                 {f.details.map(d => (
                   <li key={d} className="flex items-start gap-2.5">
                     <Check />
@@ -175,7 +176,7 @@ export default function FeaturesPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-base px-10 border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="text-base px-10 bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 >
                   View Pricing
                 </Button>
