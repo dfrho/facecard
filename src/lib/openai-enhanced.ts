@@ -31,8 +31,15 @@ async function callAPIRoute(profileData: ProfileFormData): Promise<string> {
   
   if (!response.ok) {
     const errorText = await response.text();
-    // console.error(`API route failed: ${response.status}`, errorText);
-    throw new Error(`API route failed: ${response.status} - ${errorText}`);
+    // The API answers expected failures (sign-in, limits, invalid input) with { error: message }.
+    let apiMessage: string | undefined;
+    try {
+      const parsed = JSON.parse(errorText);
+      if (parsed && typeof parsed.error === 'string') apiMessage = parsed.error;
+    } catch {
+      // Not JSON; fall back to the raw response below.
+    }
+    throw new Error(apiMessage ?? `API route failed: ${response.status} - ${errorText}`);
   }
   
   const result = await response.json();
