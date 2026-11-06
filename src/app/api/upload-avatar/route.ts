@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { MAX_AVATAR_BYTES, avatarExtension } from '@/lib/avatar-url';
-import { AvatarStorageNotConfiguredError, storeAvatar } from '@/lib/avatars';
+import { AvatarStorageNotConfiguredError, InvalidImageError, storeAvatar } from '@/lib/avatars';
 
 function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
     const url = await storeAvatar(file);
     return NextResponse.json({ url });
   } catch (error) {
+    if (error instanceof InvalidImageError) {
+      return errorResponse("That file isn't a readable image. Please choose a JPEG, PNG, WebP or GIF photo.", 400);
+    }
     console.error('Error storing avatar:', error);
     if (error instanceof AvatarStorageNotConfiguredError) {
       return errorResponse('Photo uploads are not set up yet. Please try again later.', 500);
