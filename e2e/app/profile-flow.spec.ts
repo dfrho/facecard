@@ -94,7 +94,8 @@ test('a profile photo can be uploaded and becomes the header avatar', async ({ p
   expect(response.status()).toBe(200);
   const { url } = await response.json();
   try {
-    expect(url).toMatch(/^\/uploads\/[a-f0-9-]+\.png$/);
+    // Uploads are re-encoded to WebP (which also strips metadata), whatever was uploaded.
+    expect(url).toMatch(/^\/uploads\/[a-f0-9-]+\.webp$/);
     await expect(page.getByText('Avatar uploaded successfully!')).toBeVisible();
     await expect(page.locator('header').getByRole('img', { name: 'User Avatar' })).toHaveAttribute(
       'src',
@@ -114,4 +115,17 @@ test('photo upload rejects files that are not images', async ({ page }) => {
 
   expect(response.status()).toBe(400);
   expect((await response.json()).error).toBe('Please upload a JPEG, PNG, WebP or GIF image.');
+});
+
+test('photo upload rejects files that only claim to be images', async ({ page }) => {
+  const response = await page.request.post('/api/upload-avatar', {
+    multipart: {
+      avatar: { name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>') },
+    },
+  });
+
+  expect(response.status()).toBe(400);
+  expect((await response.json()).error).toBe(
+    "That file isn't a readable image. Please choose a JPEG, PNG, WebP or GIF photo."
+  );
 });

@@ -161,8 +161,9 @@ export default function SharePage() {
               <Link href="/create-profile/video">
                 <Button variant="outline">Back</Button>
               </Link>
-              <Link href="/dashboard">
-                <Button>Go to Dashboard</Button>
+              {/* There is no dashboard yet; the home page shows the "pick up where you left off" card. */}
+              <Link href="/">
+                <Button>Done</Button>
               </Link>
             </div>
           </div>
