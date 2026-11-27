@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { oembed } from '@loomhq/loom-embed';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { loadFormData } from '@/lib/form-utils';
+import { defaultFormData, loadFormData, mergeFormData, saveFormData } from '@/lib/form-utils';
 import { RecordedVideo, useLoomRecorder } from '@/lib/use-loom-recorder';
 
 // The sandbox Loom app is for local development; deployed builds use the production app.
@@ -34,23 +35,38 @@ function VideoPageContent() {
   const searchParams = useSearchParams();
   const [scriptContent, setScriptContent] = useState<string | null>(null);
   const [loomVideoHtml, setLoomVideoHtml] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isInstructionModalOpen, setIsInstructionModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInsert = useCallback(async ({ sharedUrl }: RecordedVideo) => {
-    if (!sharedUrl) {
-      setError("Loom didn't return a link to your video. Please try again.");
-      return;
-    }
+  const showVideo = useCallback(async (sharedUrl: string, failureMessage: string) => {
     try {
       const { html } = await oembed(sharedUrl);
       setLoomVideoHtml(html);
       setError(null);
     } catch (embedError) {
       console.error('Error fetching Loom oEmbed data:', embedError);
-      setError('Your video was saved, but it could not be shown here. Please try inserting it again.');
+      setError(failureMessage);
     }
   }, []);
+
+  const handleInsert = useCallback(
+    async ({ sharedUrl }: RecordedVideo) => {
+      if (!sharedUrl) {
+        setError("Loom didn't return a link to your video. Please try again.");
+        return;
+      }
+      // Save the link before showing the video: the share step needs it even if the preview fails.
+      const stored = loadFormData() ?? defaultFormData;
+      saveFormData(mergeFormData(stored, { videoUrl: sharedUrl }), 'video');
+      setVideoUrl(sharedUrl);
+      await showVideo(
+        sharedUrl,
+        'Your video was saved, but it could not be shown here. Please try inserting it again.'
+      );
+    },
+    [showVideo]
+  );
 
   const recorder = useLoomRecorder({ appId: LOOM_APP_ID, onInsert: handleInsert });
   const recorderState = recorder.state;
@@ -61,6 +77,18 @@ function VideoPageContent() {
     setIsInstructionModalOpen(false);
     recorder.open();
   };
+
+  // Show a video recorded on an earlier visit, so the person can move on without recording again.
+  useEffect(() => {
+    const savedUrl = loadFormData()?.videoUrl;
+    if (savedUrl) {
+      setVideoUrl(savedUrl);
+      showVideo(
+        savedUrl,
+        "Your saved video couldn't be shown here, but its link is kept. Continue to share it, or record again."
+      );
+    }
+  }, [showVideo]);
 
   // Prefer the script saved with the profile, then fall back to the URL parameter.
   useEffect(() => {
@@ -165,6 +193,19 @@ function VideoPageContent() {
               </Dialog>
             </div>
           </div>
+        </div>
+
+        <div className="flex justify-between">
+          <Link href="/create-profile/script">
+            <Button variant="outline">Back</Button>
+          </Link>
+          {videoUrl ? (
+            <Link href="/create-profile/share">
+              <Button>Next: Share Your Card</Button>
+            </Link>
+          ) : (
+            <Button disabled>Next: Share Your Card</Button>
+          )}
         </div>
       </div>
     </div>

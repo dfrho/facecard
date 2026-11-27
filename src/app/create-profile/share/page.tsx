@@ -1,9 +1,74 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+'use client';
+
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import QRCode from 'qrcode';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { loadFormData } from '@/lib/form-utils';
+
+interface SavedVideo {
+  url: string;
+  // Used to name the downloaded QR code, e.g. "alex-rivera-facecard-qr.png".
+  fileName: string;
+}
+
+function qrFileName(firstName?: string, lastName?: string): string {
+  const slug = [firstName, lastName]
+    .filter(Boolean)
+    .join('-')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '');
+  return slug ? `${slug}-facecard-qr.png` : 'facecard-qr.png';
+}
 
 export default function SharePage() {
+  // undefined while reading storage, null when no video has been recorded yet.
+  const [video, setVideo] = useState<SavedVideo | null | undefined>(undefined);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const stored = loadFormData();
+    setVideo(
+      stored?.videoUrl
+        ? { url: stored.videoUrl, fileName: qrFileName(stored.firstName, stored.lastName) }
+        : null
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!video) return;
+    let cancelled = false;
+    // A large PNG with a full quiet zone, so a downloaded code still scans when printed.
+    QRCode.toDataURL(video.url, {
+      width: 512,
+      margin: 4,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#181513', light: '#ffffff' },
+    })
+      .then(dataUrl => {
+        if (!cancelled) setQrDataUrl(dataUrl);
+      })
+      .catch(error => console.error('Error making the QR code:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [video]);
+
+  const copyLink = async () => {
+    if (!video) return;
+    try {
+      await navigator.clipboard.writeText(video.url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Error copying the link:', error);
+    }
+  };
+
   return (
     <div className="container max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
       <div className="space-y-8">
@@ -26,41 +91,81 @@ export default function SharePage() {
               </p>
             </div>
             
-            <div className="flex gap-2">
-              <Input 
-                readOnly 
-                value="https://facecard.ai/v/abcd1234" 
-                className="flex-1"
-              />
-              <Button variant="outline">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                <span className="sr-only">Copy</span>
-              </Button>
-            </div>
-            
+            {video === null && (
+              <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
+                <p>
+                  Record your video first. Your link and QR code will appear here.{' '}
+                  <Link href="/create-profile/video" className="font-medium text-primary underline">
+                    Go to Step 4
+                  </Link>
+                </p>
+              </div>
+            )}
+
+            {video && (
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={video.url}
+                  aria-label="Your video link"
+                  className="flex-1"
+                />
+                <Button variant="outline" onClick={copyLink} className="gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span aria-live="polite">{copied ? 'Copied' : 'Copy'}</span>
+                </Button>
+              </div>
+            )}
+
             <div className="rounded-xl border p-4">
               <h3 className="text-lg font-medium mb-2">QR Code</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Scanning it opens your video. Add it to slides, name badges or a printed card.
+              </p>
               <div className="flex items-center justify-center">
-                <div className="border border-muted w-40 h-40 flex items-center justify-center">
-                  <p className="text-sm text-muted-foreground">QR Code Preview</p>
-                </div>
+                {qrDataUrl ? (
+                  <Image
+                    src={qrDataUrl}
+                    alt="QR code that opens your video"
+                    width={160}
+                    height={160}
+                    unoptimized
+                    className="rounded-md ring-1 ring-border"
+                  />
+                ) : (
+                  <div className="w-40 h-40 rounded-md border border-dashed border-border flex items-center justify-center p-3">
+                    <p className="text-sm text-center text-muted-foreground">
+                      {video === null ? 'Appears after you record' : 'Making your QR code…'}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="flex justify-center mt-4">
-                <Button variant="outline" size="sm">Download QR Code</Button>
+                {qrDataUrl && video ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={qrDataUrl} download={video.fileName}>
+                      Download QR Code
+                    </a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Download QR Code
+                  </Button>
+                )}
               </div>
             </div>
             
