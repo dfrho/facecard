@@ -46,7 +46,9 @@ export interface ProfileFormData {
   seeking?: string;
   idealConnection?: string;
   generatedScript?: string;
-  
+  // Loom's share link for the recorded video; the share step builds the QR code from it.
+  videoUrl?: string;
+
   // Form tracking
   completedSteps?: FormStep[];
 }
