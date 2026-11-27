@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ResumeCard } from "@/components/resume-card";
 
@@ -11,8 +12,9 @@ export default function Home() {
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="flex flex-col space-y-6 sm:space-y-8">
               <div className="space-y-3 sm:space-y-4">
-                <span className="animate-fade-up-1 inline-block font-sans-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  AI-Powered Video Business Cards
+                <span className="animate-fade-up-1 inline-block font-sans-body text-lg leading-snug uppercase tracking-[0.03em] sm:tracking-[0.2em] text-muted-foreground">
+                  AI Video Business Cards <br />
+                  for Professionals Who Network
                 </span>
                 <h1 className="animate-fade-up-2 font-display italic text-4xl font-semibold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1] md:text-6xl lg:text-7xl text-foreground">
                   Make your introduction{" "}
@@ -37,29 +39,39 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Abstract card mockup */}
+            {/* Example video card */}
             <div className="animate-fade-up-3 hidden lg:flex items-center justify-center">
               <div className="relative w-full max-w-sm">
                 <div className="absolute -top-4 -left-4 w-full h-full rounded-2xl border-2 border-primary/20 bg-card" />
                 <div className="relative rounded-2xl border border-border bg-card p-8 shadow-lg">
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-primary/15 flex items-center justify-center">
-                        <span className="font-display italic text-primary text-lg font-semibold">K</span>
-                      </div>
+                      <Image
+                        src="/images/intro-avatar.jpg"
+                        alt=""
+                        width={48}
+                        height={48}
+                        className="h-12 w-12 rounded-full object-cover ring-1 ring-border"
+                      />
                       <div>
                         <p className="font-display font-semibold text-foreground">Alex Rivera</p>
                         <p className="font-sans-body text-sm text-muted-foreground">Product Designer · San Francisco</p>
                       </div>
                     </div>
-                    <div className="rounded-xl bg-background border border-border aspect-video flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/15" />
-                      <div className="relative flex flex-col items-center gap-2">
-                        <div className="h-10 w-10 rounded-full bg-primary/90 flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-primary-foreground ml-0.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        </div>
-                        <span className="font-sans-body text-xs text-muted-foreground">0:24</span>
+                    <div className="rounded-xl bg-background border border-border aspect-video relative overflow-hidden">
+                      {/* Same still as the social sharing image; the play button sits left of her face. */}
+                      <Image
+                        src="/images/intro-video.jpg"
+                        alt="A woman recording a short video introduction"
+                        fill
+                        sizes="320px"
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent from-55% to-foreground/25" />
+                      <div className="absolute left-[28%] top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-primary-foreground ml-0.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                       </div>
+                      <span className="absolute right-2 bottom-2 rounded-full bg-foreground/60 px-2 py-0.5 font-sans-body text-xs font-medium text-background">0:24</span>
                     </div>
                     <div className="space-y-1.5">
                       <div className="h-2 rounded-full bg-border w-full" />
